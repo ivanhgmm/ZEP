@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZEP – Oficina Virtual</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── Login overlay ─────────────────────────────────────────── -->
+  <div id="login-screen">
+    <div id="login-box">
+      <h1>🏢 ZEP Oficina</h1>
+      <p>Elige tu nombre y sala</p>
+      <input id="input-name" type="text" placeholder="Tu nombre" maxlength="20" autocomplete="off" />
+      <div id="map-selector">
+        <!-- Populated by JS -->
+      </div>
+      <button id="btn-enter">Entrar →</button>
+    </div>
+  </div>
+
+  <!-- ── Main app ───────────────────────────────────────────────── -->
+  <div id="app" class="hidden">
+
+    <header>
+      <div class="header-left">
+        <span id="map-name">🏢 Oficina</span>
+        <span id="online-count" title="Personas en esta sala">👥 <span id="count-num">0</span></span>
+      </div>
+      <div class="header-center">
+        <span id="my-tag"></span>
+      </div>
+      <div class="header-right">
+        <span class="hint-key">← ↑ ↓ →</span>
+        <button id="btn-change-map">Cambiar sala</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Map list sidebar (hidden by default, shown on change-room) -->
+      <aside id="room-sidebar" class="hidden">
+        <h2>Salas</h2>
+        <ul id="room-list"></ul>
+        <button id="btn-close-sidebar">✕</button>
+      </aside>
+
+      <!-- Map canvas wrapper -->
+      <section id="map-area">
+        <div id="grid-wrapper">
+          <div id="grid"></div>
+        </div>
+      </section>
+
+      <!-- Players panel -->
+      <aside id="players-panel">
+        <h2>En esta sala</h2>
+        <ul id="player-list"></ul>
+      </aside>
+    </main>
+
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

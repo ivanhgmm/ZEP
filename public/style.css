@@ -1,0 +1,285 @@
+/* ─── Reset ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #12121f;
+  --panel:   #1c1c30;
+  --border:  #2a2a50;
+  --accent:  #5c6ef8;
+  --danger:  #e94560;
+  --text:    #dde1f0;
+  --muted:   #6b7194;
+  --cell:    40px;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.hidden { display: none !important; }
+
+/* ─── Login Screen ───────────────────────────────────────────── */
+#login-screen {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+#login-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 360px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+#login-box h1 { font-size: 1.6rem; text-align: center; }
+#login-box p  { text-align: center; color: var(--muted); font-size: 0.9rem; }
+
+#input-name {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.2s;
+}
+#input-name:focus { border-color: var(--accent); }
+
+#map-selector { display: flex; flex-direction: column; gap: 8px; }
+
+.map-option {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+}
+.map-option:hover  { border-color: var(--accent); }
+.map-option.active { border-color: var(--accent); background: rgba(92,110,248,0.15); }
+
+#btn-enter {
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#btn-enter:hover { background: #4456d8; }
+
+/* ─── App Layout ─────────────────────────────────────────────── */
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.header-left  { display: flex; align-items: center; gap: 14px; }
+.header-center { flex: 1; text-align: center; }
+.header-right  { display: flex; align-items: center; gap: 12px; }
+
+#map-name { font-weight: 700; font-size: 1rem; }
+#online-count { font-size: 0.85rem; color: var(--muted); }
+#my-tag { font-size: 0.85rem; color: var(--accent); font-weight: 600; }
+.hint-key { font-size: 0.75rem; color: var(--muted); }
+
+#btn-change-map {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+#btn-change-map:hover { border-color: var(--accent); background: rgba(92,110,248,0.1); }
+
+main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ─── Room Sidebar ───────────────────────────────────────────── */
+#room-sidebar {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 220px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+}
+#room-sidebar h2 { font-size: 0.8rem; text-transform: uppercase; color: var(--muted); }
+#room-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+#room-list li {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+#room-list li:hover { background: rgba(92,110,248,0.12); border-color: var(--accent); }
+#btn-close-sidebar {
+  margin-top: auto;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+/* ─── Map Area ───────────────────────────────────────────────── */
+#map-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 20px;
+}
+
+#grid-wrapper {
+  position: relative;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.7);
+  /* no pointer events — read-only map */
+  background: #1e1e2f;
+}
+
+#grid {
+  display: grid;
+  grid-template-columns: repeat(16, var(--cell));
+  grid-template-rows:    repeat(16, var(--cell));
+  position: relative;
+}
+
+/* ─── Tiles ──────────────────────────────────────────────────── */
+.cell {
+  width: var(--cell);
+  height: var(--cell);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  user-select: none;
+}
+
+/* Tile colours */
+.tile-empty      { background: #252538; }
+.tile-floor      { background: #2e2e48; }
+.tile-wall       { background: #111122; }
+.tile-grass      { background: #1e3d1e; }
+.tile-desk       { background: #3a2d1a; }
+.tile-chair      { background: #2a2020; }
+.tile-meeting    { background: #1a2a3a; }
+.tile-plant      { background: #1a2e1a; }
+.tile-bathroom   { background: #1a2030; }
+.tile-reception  { background: #2a1a2e; }
+.tile-sofa       { background: #2e1e10; }
+.tile-coffee     { background: #201818; }
+.tile-door       { background: #2a1010; }
+
+/* icons shown via pseudo‑elements / textContent in JS */
+
+/* ─── Player Avatar ──────────────────────────────────────────── */
+.player-avatar {
+  position: absolute;
+  width: var(--cell);
+  height: var(--cell);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  pointer-events: none;
+  transition: top 0.12s ease, left 0.12s ease;
+  z-index: 5;
+}
+
+.player-avatar .avatar-label {
+  position: absolute;
+  bottom: calc(var(--cell) - 4px);
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.player-avatar.is-me .avatar-label {
+  background: var(--accent);
+}
+
+/* ─── Players Panel ──────────────────────────────────────────── */
+#players-panel {
+  width: 180px;
+  min-width: 180px;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+#players-panel h2 { font-size: 0.8rem; text-transform: uppercase; color: var(--muted); }
+
+#player-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+#player-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  transition: background 0.15s;
+}
+#player-list li.is-me { border-left: 3px solid var(--accent); }
+#player-list li .p-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
