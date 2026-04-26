@@ -1,56 +1,56 @@
 // ─── Tile definitions ─────────────────────────────────────────────────────────
 const TILE_ICONS = {
-  empty:     '',
-  floor:     '',
-  wall:      '🧱',
-  grass:     '🌿',
-  desk:      '🖥️',
-  chair:     '🪑',
-  meeting:   '📋',
-  plant:     '🌱',
-  bathroom:  '🚽',
+  empty: '',
+  floor: '',
+  wall: '🧱',
+  grass: '🌿',
+  desk: '🖥️',
+  chair: '🪑',
+  meeting: '📋',
+  plant: '🌱',
+  bathroom: '🚽',
   reception: '📞',
-  sofa:      '🛋️',
-  coffee:    '☕',
-  door:      '🚪',
+  sofa: '🛋️',
+  coffee: '☕',
+  door: '🚪',
 };
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let myId       = null;
-let myName     = '';
+let myId = null;
+let myName = '';
 let currentMap = null;   // { id, name, readonly, rows, cols, grid }
-let players    = {};     // { [socketId]: { id, name, avatar, x, y } }
+let players = {};     // { [socketId]: { id, name, avatar, x, y } }
 let selectedMapId = 'office';
 
 // ─── Socket ───────────────────────────────────────────────────────────────────
 const socket = io();
 
 // ─── DOM ─────────────────────────────────────────────────────────────────────
-const loginScreen    = document.getElementById('login-screen');
-const app            = document.getElementById('app');
-const inputName      = document.getElementById('input-name');
-const mapSelector    = document.getElementById('map-selector');
-const btnEnter       = document.getElementById('btn-enter');
-const mapNameEl      = document.getElementById('map-name');
-const countNumEl     = document.getElementById('count-num');
-const myTagEl        = document.getElementById('my-tag');
-const grid           = document.getElementById('grid');
-const playerList     = document.getElementById('player-list');
-const roomList       = document.getElementById('room-list');
-const roomSidebar    = document.getElementById('room-sidebar');
-const btnChangeMap   = document.getElementById('btn-change-map');
-const btnCloseSidebar= document.getElementById('btn-close-sidebar');
+const loginScreen = document.getElementById('login-screen');
+const app = document.getElementById('app');
+const inputName = document.getElementById('input-name');
+const mapSelector = document.getElementById('map-selector');
+const btnEnter = document.getElementById('btn-enter');
+const mapNameEl = document.getElementById('map-name');
+const countNumEl = document.getElementById('count-num');
+const myTagEl = document.getElementById('my-tag');
+const grid = document.getElementById('grid');
+const playerList = document.getElementById('player-list');
+const roomList = document.getElementById('room-list');
+const roomSidebar = document.getElementById('room-sidebar');
+const btnChangeMap = document.getElementById('btn-change-map');
+const btnCloseSidebar = document.getElementById('btn-close-sidebar');
 
 // ─── Fetch map list and build login selector ───────────────────────────────────
 async function initLogin() {
-  const res  = await fetch('/api/maps');
+  const res = await fetch('/api/maps');
   const maps = await res.json();
 
   maps.forEach(m => {
     const btn = document.createElement('button');
-    btn.className   = 'map-option' + (m.id === selectedMapId ? ' active' : '');
+    btn.className = 'map-option' + (m.id === selectedMapId ? ' active' : '');
     btn.textContent = m.name;
-    btn.dataset.id  = m.id;
+    btn.dataset.id = m.id;
     btn.addEventListener('click', () => {
       selectedMapId = m.id;
       mapSelector.querySelectorAll('.map-option').forEach(b => b.classList.remove('active'));
@@ -60,8 +60,8 @@ async function initLogin() {
 
     // Also add to room sidebar list
     const li = document.createElement('li');
-    li.textContent  = m.name;
-    li.dataset.id   = m.id;
+    li.textContent = m.name;
+    li.dataset.id = m.id;
     li.addEventListener('click', () => changeMap(m.id));
     roomList.appendChild(li);
   });
@@ -71,9 +71,22 @@ async function initLogin() {
 btnEnter.addEventListener('click', enterOffice);
 inputName.addEventListener('keydown', e => { if (e.key === 'Enter') enterOffice(); });
 
+// --- NUEVO: Cargar el nombre guardado ---
+const savedName = localStorage.getItem('savedPlayerName');
+if (savedName) {
+  inputName.value = savedName;
+  btnEnter.focus(); // El usuario solo tiene que dar Enter y listo
+} else {
+  inputName.focus(); // Si no hay nombre, que empiece a escribir
+}
+
 function enterOffice() {
   const name = inputName.value.trim();
   if (!name) { inputName.focus(); return; }
+
+  // --- NUEVO: Guardar el nombre ---
+  localStorage.setItem('savedPlayerName', name);
+
   myName = name;
   loginScreen.classList.add('hidden');
   app.classList.remove('hidden');
@@ -97,10 +110,10 @@ function renderGrid() {
     for (let col = 0; col < currentMap.cols; col++) {
       const type = currentMap.grid[row][col];
       const cell = document.createElement('div');
-      cell.className    = `cell tile-${type}`;
-      cell.dataset.x    = col;
-      cell.dataset.y    = row;
-      cell.textContent  = TILE_ICONS[type] || '';
+      cell.className = `cell tile-${type}`;
+      cell.dataset.x = col;
+      cell.dataset.y = row;
+      cell.textContent = TILE_ICONS[type] || '';
       grid.appendChild(cell);
     }
   }
@@ -114,13 +127,13 @@ function getAvatarEl(id) {
 function createAvatar(player) {
   const el = document.createElement('div');
   el.className = 'player-avatar' + (player.id === myId ? ' is-me' : '');
-  el.id        = `avatar-${player.id}`;
+  el.id = `avatar-${player.id}`;
 
   const emoji = document.createElement('span');
   emoji.textContent = player.avatar;
 
   const label = document.createElement('span');
-  label.className   = 'avatar-label';
+  label.className = 'avatar-label';
   label.textContent = player.name;
 
   el.appendChild(emoji);
@@ -134,7 +147,7 @@ function createAvatar(player) {
 function positionAvatar(el, x, y) {
   const CELL = 40; // px — matches --cell
   el.style.left = (x * CELL) + 'px';
-  el.style.top  = (y * CELL) + 'px';
+  el.style.top = (y * CELL) + 'px';
 }
 
 function removeAvatar(id) {
@@ -198,14 +211,14 @@ socket.on('player:left', (id) => {
 
 // ─── Keyboard movement ────────────────────────────────────────────────────────
 const DIRS = {
-  ArrowUp:    { dx:  0, dy: -1 },
-  ArrowDown:  { dx:  0, dy:  1 },
-  ArrowLeft:  { dx: -1, dy:  0 },
-  ArrowRight: { dx:  1, dy:  0 },
-  w: { dx:  0, dy: -1 },
-  s: { dx:  0, dy:  1 },
-  a: { dx: -1, dy:  0 },
-  d: { dx:  1, dy:  0 },
+  ArrowUp: { dx: 0, dy: -1 },
+  ArrowDown: { dx: 0, dy: 1 },
+  ArrowLeft: { dx: -1, dy: 0 },
+  ArrowRight: { dx: 1, dy: 0 },
+  w: { dx: 0, dy: -1 },
+  s: { dx: 0, dy: 1 },
+  a: { dx: -1, dy: 0 },
+  d: { dx: 1, dy: 0 },
 };
 
 document.addEventListener('keydown', (e) => {

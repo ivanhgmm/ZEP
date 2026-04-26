@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZEP – Oficina Virtual</title>
+  <title>Oficina Virtual - EvoSeed</title>
+  <link rel="icon" type="image/png" href="assets/icon.png" />
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
   <!-- ── Login overlay ─────────────────────────────────────────── -->
   <div id="login-screen">
     <div id="login-box">
-      <h1>🏢 ZEP Oficina</h1>
+      <h1>Virtual Office</h1>
       <p>Elige tu nombre y sala</p>
       <input id="input-name" type="text" placeholder="Tu nombre" maxlength="20" autocomplete="off" />
       <div id="map-selector">
         <!-- Populated by JS -->
       </div>
-      <button id="btn-enter">Entrar →</button>
+      <button id="btn-enter">Entrar</button>
+      <a href="https://evoseed.netlify.app/" target="_blank" class="btn-link">¿Quiénes somos?</a>
     </div>
   </div>
 
@@ -33,6 +37,8 @@
         <span id="my-tag"></span>
       </div>
       <div class="header-right">
+        <a href="https://evoseed.netlify.app/" target="_blank" class="btn-link">¿Quiénes somos?</a>
+
         <span class="hint-key">← ↑ ↓ →</span>
         <button id="btn-change-map">Cambiar sala</button>
       </div>
@@ -65,4 +71,5 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="app.js"></script>
 </body>
+
 </html>
