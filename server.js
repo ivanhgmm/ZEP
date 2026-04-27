@@ -117,8 +117,9 @@ io.on('connection', (socket) => {
   console.log(`[+] Connected: ${socket.id}`);
 
   // New player joins a map
-  socket.on('join', ({ name, mapId }) => {
-    const avatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+  socket.on('join', (data) => {
+    const { name, mapId } = data;
+    const avatar = data.avatar || AVATARS[Math.floor(Math.random() * AVATARS.length)];
     const map    = PRESET_MAPS[mapId] || PRESET_MAPS['office'];
 
     // Find a walkable spawn position

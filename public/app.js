@@ -18,9 +18,13 @@ const TILE_ICONS = {
 // ─── State ────────────────────────────────────────────────────────────────────
 let myId = null;
 let myName = '';
+let myAvatar = '🧑';
 let currentMap = null;   // { id, name, readonly, rows, cols, grid }
 let players = {};     // { [socketId]: { id, name, avatar, x, y } }
 let selectedMapId = 'office';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+const AVATARS = ['🧑', '👩', '👨', '🧔', '👱', '👩‍💼', '👨‍💼', '🧑‍💻', '👩‍💻', '👨‍💻', '👽', '🐶', '🐱', '🤖'];
 
 // ─── Socket ───────────────────────────────────────────────────────────────────
 const socket = io();
@@ -138,6 +142,27 @@ async function initLogin() {
   });
 }
 
+function initAvatarSelector() {
+  const container = document.getElementById('avatar-selector');
+  const savedAvatar = localStorage.getItem('savedPlayerAvatar') || AVATARS[0];
+  myAvatar = savedAvatar;
+
+  AVATARS.forEach(emoji => {
+    const el = document.createElement('div');
+    el.className = 'avatar-option' + (emoji === myAvatar ? ' active' : '');
+    el.textContent = emoji;
+    el.addEventListener('click', () => {
+      myAvatar = emoji;
+      container.querySelectorAll('.avatar-option').forEach(a => a.classList.remove('active'));
+      el.classList.add('active');
+    });
+    container.appendChild(el);
+  });
+}
+
+// Initialize on load
+initAvatarSelector();
+
 // ─── Enter the office ─────────────────────────────────────────────────────────
 btnEnter.addEventListener('click', enterOffice);
 inputName.addEventListener('keydown', e => { if (e.key === 'Enter') enterOffice(); });
@@ -155,14 +180,15 @@ function enterOffice() {
   const name = inputName.value.trim();
   if (!name) { inputName.focus(); return; }
 
-  // --- NUEVO: Guardar el nombre ---
+  // --- NUEVO: Guardar el nombre y avatar ---
   localStorage.setItem('savedPlayerName', name);
+  localStorage.setItem('savedPlayerAvatar', myAvatar);
 
   myName = name;
   loginScreen.classList.add('hidden');
   app.classList.remove('hidden');
   myTagEl.textContent = ''; // will set after join confirmed
-  socket.emit('join', { name, mapId: selectedMapId });
+  socket.emit('join', { name, mapId: selectedMapId, avatar: myAvatar });
 }
 
 // ─── Load and render map ──────────────────────────────────────────────────────

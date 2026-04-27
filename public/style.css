@@ -208,6 +208,47 @@ body {
 
 #input-name:focus {
   border-color: var(--accent);
+  padding: 10px;
+}
+
+.section-label {
+  font-size: 0.9rem;
+  color: var(--text-sec);
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+#avatar-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.avatar-option {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.avatar-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.avatar-option.active {
+  border-color: var(--accent);
+  background: rgba(92, 110, 248, 0.2);
+  transform: scale(1.15);
 }
 
 #map-selector {
