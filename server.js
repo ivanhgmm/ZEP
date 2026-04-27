@@ -114,7 +114,7 @@ io.on('connection', (socket) => {
       }
     }
 
-    players[socket.id] = { id: socket.id, name, avatar, x: spawnX, y: spawnY, mapId };
+    players[socket.id] = { id: socket.id, name, avatar, x: spawnX, y: spawnY, mapId, screenActive: false, voiceActive: false };
 
     socket.join(mapId);
 

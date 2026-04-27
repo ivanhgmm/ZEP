@@ -255,7 +255,14 @@ function renderPlayerList() {
 socket.on('init', ({ players: serverPlayers, myId: serverId }) => {
   if (serverId) myId = serverId;
   players = {};
-  serverPlayers.forEach(p => { players[p.id] = p; });
+  serverPlayers.forEach(p => { 
+    players[p.id] = p; 
+    // If someone is already sharing screen, show it
+    if (p.screenActive && p.id !== myId) {
+      addScreenCard(p.id, p.name);
+      initiateScreenCall(p.id);
+    }
+  });
   myTagEl.textContent = `${myName}`;
   loadMap(selectedMapId);
 });
@@ -477,8 +484,13 @@ function stopVoiceChat() {
 // Signaling events
 socket.on('voice:joined', (peerId) => {
   if (!isVoiceActive) return;
-  // If a new person joins voice, the person already in voice (me) initiates the call
-  initiateCall(peerId);
+  // To avoid glare (both sides initiating), only the one with the "smaller" ID initiates
+  if (myId < peerId) {
+    console.log('[Voice] Initiating call to:', peerId);
+    initiateCall(peerId);
+  } else {
+    console.log('[Voice] Waiting for offer from:', peerId);
+  }
 });
 
 socket.on('voice:left', (peerId) => {
@@ -497,9 +509,17 @@ socket.on('signal', async ({ fromId, signalData, streamType }) => {
     else if (signalData.candidate) await handleScreenCandidate(fromId, signalData);
   } else {
     if (!isVoiceActive) return;
-    if (signalData.type === 'offer') await handleOffer(fromId, signalData);
-    else if (signalData.type === 'answer') await handleAnswer(fromId, signalData);
-    else if (signalData.candidate) await handleCandidate(fromId, signalData);
+    if (signalData.type === 'offer') {
+      console.log('[Voice] Received offer from:', fromId);
+      await handleOffer(fromId, signalData);
+    }
+    else if (signalData.type === 'answer') {
+      console.log('[Voice] Received answer from:', fromId);
+      await handleAnswer(fromId, signalData);
+    }
+    else if (signalData.candidate) {
+      await handleCandidate(fromId, signalData);
+    }
   }
 });
 
@@ -550,11 +570,18 @@ function createPeerConnection(peerId) {
   };
 
   pc.ontrack = (event) => {
+    console.log('[Voice] Received remote track from:', peerId);
     addRemoteAudio(peerId, event.streams[0]);
   };
 
+  pc.onconnectionstatechange = () => {
+    console.log(`[Voice] Connection state with ${peerId}: ${pc.connectionState}`);
+  };
+
   if (localStream) {
-    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    localStream.getTracks().forEach(track => {
+      pc.addTrack(track, localStream);
+    });
   }
 
   return pc;
@@ -569,6 +596,7 @@ function addRemoteAudio(peerId, stream) {
     document.body.appendChild(audioEl);
   }
   audioEl.srcObject = stream;
+  audioEl.play().catch(e => console.log("[Voice] Autoplay blocked, waiting for interaction", e));
 }
 
 // ─── Screen Sharing Logic ────────────────────────────────────────────────────
@@ -683,7 +711,8 @@ function closeScreenFocus() {
 }
 
 async function initiateScreenCall(peerId) {
-  const pc = createScreenPeerConnection(peerId);
+  // As a viewer, we initiate a call to receive the stream
+  const pc = createScreenPeerConnection(peerId, false);
   screenPeers[peerId].pc = pc;
 
   const offer = await pc.createOffer();
@@ -692,13 +721,12 @@ async function initiateScreenCall(peerId) {
 }
 
 async function handleScreenOffer(fromId, offer) {
-  // If we don't have a card for them yet (race condition?), add it
   if (!screenPeers[fromId]) {
-    // We might not have the name here... using ID as fallback
-    addScreenCard(fromId, "Usuario");
+    addScreenCard(fromId, players[fromId]?.name || "Usuario");
   }
 
-  const pc = createScreenPeerConnection(fromId);
+  // As a sharer receiving an offer from a viewer, we send our stream
+  const pc = createScreenPeerConnection(fromId, true);
   screenPeers[fromId].pc = pc;
 
   await pc.setRemoteDescription(new RTCSessionDescription(offer));
@@ -725,7 +753,7 @@ async function handleScreenCandidate(fromId, candidate) {
   }
 }
 
-function createScreenPeerConnection(peerId) {
+function createScreenPeerConnection(peerId, isSharer) {
   const pc = new RTCPeerConnection(rtcConfig);
 
   pc.onicecandidate = (event) => {
@@ -735,19 +763,27 @@ function createScreenPeerConnection(peerId) {
   };
 
   pc.ontrack = (event) => {
-    console.log('[WebRTC] Received remote screen track for:', peerId);
+    console.log('[Screen] Received remote track from:', peerId);
     if (screenPeers[peerId]) {
       screenPeers[peerId].videoEl.srcObject = event.streams[0];
-      // If this is the focused peer, update focus video too
+      screenPeers[peerId].videoEl.play().catch(e => console.log("[Screen] Autoplay blocked", e));
       if (focusedPeerId === peerId) {
         focusedVideo.srcObject = event.streams[0];
+        focusedVideo.play().catch(e => {});
       }
     }
   };
 
-  if (localScreenStream) {
+  pc.onconnectionstatechange = () => {
+    console.log(`[Screen] Connection state with ${peerId}: ${pc.connectionState}`);
+  };
+
+  if (isSharer && localScreenStream) {
+    console.log('[Screen] Adding local screen tracks to PC for:', peerId);
     localScreenStream.getTracks().forEach(track => pc.addTrack(track, localScreenStream));
   } else {
+    // If we are the viewer, or if we don't have a stream, we just want to receive
+    console.log('[Screen] Adding recvonly transceiver for:', peerId);
     pc.addTransceiver('video', { direction: 'recvonly' });
   }
 
