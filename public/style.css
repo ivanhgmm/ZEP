@@ -32,6 +32,135 @@ body {
   display: none !important;
 }
 
+.chat-msg {
+  position: relative;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  word-break: break-word;
+  animation: fadeIn 0.2s ease-out;
+  margin-bottom: 8px; /* Extra space for reactions */
+}
+
+/* ─── Chat Reactions ────────────────────────────────────────── */
+.reactions-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.reaction-bubble {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.reaction-bubble:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--accent);
+}
+
+.reaction-bubble.pop {
+  animation: reactionPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes reactionPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.msg-actions {
+  position: absolute;
+  right: -30px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 5;
+}
+
+.chat-msg.is-me .msg-actions {
+  left: -30px;
+  right: auto;
+}
+
+.chat-msg-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  width: fit-content;
+}
+
+.chat-msg.is-me .chat-msg-body {
+  flex-direction: row-reverse;
+  margin-left: auto;
+}
+
+.chat-msg:hover .msg-actions {
+  opacity: 1;
+}
+
+.btn-react {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.2s;
+}
+
+.btn-react:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(92, 110, 248, 0.1);
+}
+
+.reaction-picker {
+  position: absolute;
+  bottom: 30px;
+  left: 0; /* Default (remote messages): extend to the right */
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 10px;
+  display: flex;
+  gap: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  white-space: nowrap;
+}
+
+.chat-msg.is-me .reaction-picker {
+  left: auto;
+  right: 0; /* My messages: extend to the left */
+}
+
+.reaction-picker span {
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.reaction-picker span:hover {
+  transform: scale(1.3);
+}
+
 /* ─── Login Screen ───────────────────────────────────────────── */
 #login-screen {
   position: fixed;
@@ -351,6 +480,48 @@ main {
 }
 
 /* icons shown via pseudo‑elements / textContent in JS */
+
+/* ─── Spatial Audio Zones ────────────────────────────────────── */
+.zone-overlay {
+  position: absolute;
+  background: rgba(92, 110, 248, 0.08); /* subtle blue tint */
+  border: 1px dashed rgba(92, 110, 248, 0.4);
+  pointer-events: none;
+  z-index: 1;
+}
+
+#zone-indicator {
+  background: rgba(92, 110, 248, 0.2);
+  color: #fff;
+  border: 1px solid var(--accent);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 10px;
+  transition: all 0.3s;
+}
+
+#zone-indicator.active {
+  box-shadow: 0 0 10px rgba(92, 110, 248, 0.4);
+  animation: pulseZone 2s infinite;
+}
+
+@keyframes pulseZone {
+  0% { box-shadow: 0 0 5px rgba(92, 110, 248, 0.2); }
+  50% { box-shadow: 0 0 15px rgba(92, 110, 248, 0.6); }
+  100% { box-shadow: 0 0 5px rgba(92, 110, 248, 0.2); }
+}
+
+.player-avatar.muted-zone {
+  opacity: 0.5;
+  filter: grayscale(1);
+}
+
+.player-avatar.muted-zone .avatar-label {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
 
 /* ─── Player Avatar ──────────────────────────────────────────── */
 .player-avatar {

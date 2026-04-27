@@ -48,6 +48,10 @@ const PRESET_MAPS = {
       [T.W, T.R, T.R, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.W],
       [T.W, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.W],
       [T.W, T.W, T.W, T.W, T.W, T.W, T.W, T.O, T.W, T.W, T.W, T.W, T.W, T.W, T.W, T.W],
+      [T.W, T.W, T.W, T.W, T.W, T.W, T.W, T.O, T.W, T.W, T.W, T.W, T.W, T.W, T.W, T.W],
+    ],
+    zones: [
+      { id: 'meeting1', name: 'Sala de Reuniones', rect: { minX: 4, minY: 7, maxX: 10, maxY: 11 }, type: 'meeting' }
     ]
   },
 
@@ -71,6 +75,11 @@ const PRESET_MAPS = {
       [T.W, T.G, T.G, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.F, T.G, T.G, T.W],
       [T.W, T.G, T.P, T.G, T.G, T.G, T.G, T.G, T.G, T.G, T.G, T.G, T.G, T.P, T.G, T.W],
       [T.W, T.W, T.W, T.W, T.W, T.W, T.W, T.O, T.W, T.W, T.W, T.W, T.W, T.W, T.W, T.W],
+      [T.W, T.W, T.W, T.W, T.W, T.W, T.W, T.O, T.W, T.W, T.W, T.W, T.W, T.W, T.W, T.W],
+    ],
+    zones: [
+      { id: 'lounge', name: 'Área Lounge', rect: { minX: 3, minY: 3, maxX: 12, maxY: 6 }, type: 'sofa' },
+      { id: 'meeting_chill', name: 'Mesa de Trabajo', rect: { minX: 4, minY: 8, maxX: 10, maxY: 11 }, type: 'meeting' }
     ]
   }
 };
@@ -87,7 +96,15 @@ app.get('/api/maps', (req, res) => {
 app.get('/api/maps/:id', (req, res) => {
   const map = PRESET_MAPS[req.params.id];
   if (!map) return res.status(404).json({ error: 'Map not found' });
-  res.json({ id: req.params.id, name: map.name, readonly: map.readonly, rows: 16, cols: 16, grid: map.grid });
+  res.json({ 
+    id: req.params.id, 
+    name: map.name, 
+    readonly: map.readonly, 
+    rows: 16, 
+    cols: 16, 
+    grid: map.grid,
+    zones: map.zones || [] 
+  });
 });
 
 // ── Socket.io: real-time presence ────────────────────────────────────────────
@@ -177,6 +194,18 @@ io.on('connection', (socket) => {
     };
 
     io.to(p.mapId).emit('chat:message', messageData);
+  });
+
+  // Chat reaction
+  socket.on('chat:reaction', ({ messageId, emoji }) => {
+    const p = players[socket.id];
+    if (!p || !messageId || !emoji) return;
+
+    io.to(p.mapId).emit('chat:reaction', {
+      messageId,
+      emoji,
+      senderId: socket.id
+    });
   });
 
   // Signaling relay for WebRTC (voice or screen)

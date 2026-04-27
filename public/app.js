@@ -51,7 +51,7 @@ notificationSound.volume = 0.5;
 // ─── Voice Chat State ────────────────────────────────────────────────────────
 const btnVoiceToggle = document.getElementById('btn-voice-toggle');
 let localStream = null;
-let isVoiceActive = false;
+let isMicActive = false; // Whether our microphone track is sending audio
 let peers = {}; // { [peerId]: RTCPeerConnection }
 const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
@@ -189,6 +189,20 @@ function renderGrid() {
       grid.appendChild(cell);
     }
   }
+
+  // Render Zones Overlays
+  if (currentMap.zones) {
+    const CELL = 40; // match --cell
+    currentMap.zones.forEach(zone => {
+      const el = document.createElement('div');
+      el.className = 'zone-overlay';
+      el.style.left = (zone.rect.minX * CELL) + 'px';
+      el.style.top = (zone.rect.minY * CELL) + 'px';
+      el.style.width = ((zone.rect.maxX - zone.rect.minX + 1) * CELL) + 'px';
+      el.style.height = ((zone.rect.maxY - zone.rect.minY + 1) * CELL) + 'px';
+      grid.appendChild(el);
+    });
+  }
 }
 
 // ─── Player Avatar management ─────────────────────────────────────────────────
@@ -233,6 +247,8 @@ function renderAllPlayers() {
   // Render all
   Object.values(players).forEach(p => createAvatar(p));
   renderPlayerList();
+  
+  updateIsolation(); // Apply isolation logic on full render
 }
 
 // ─── Player sidebar list ──────────────────────────────────────────────────────
@@ -251,16 +267,17 @@ function renderPlayerList() {
   });
 }
 
-// ─── Socket events ────────────────────────────────────────────────────────────
 socket.on('init', ({ players: serverPlayers, myId: serverId }) => {
   if (serverId) myId = serverId;
   players = {};
   serverPlayers.forEach(p => { 
     players[p.id] = p; 
-    // If someone is already sharing screen, show it
-    if (p.screenActive && p.id !== myId) {
-      addScreenCard(p.id, p.name);
-      initiateScreenCall(p.id);
+    // Screen sharing and isolation filtering will be handled by updateIsolation()
+    // after the map is fully loaded in loadMap().
+    
+    // Also initiate voice connection with everyone (Passive listening)
+    if (p.id !== myId) {
+      setupVoiceConnection(p.id);
     }
   });
   myTagEl.textContent = `${myName}`;
@@ -273,8 +290,95 @@ socket.on('player:joined', (player) => {
   if (player.mapId === currentMap?.id) {
     createAvatar(player);
     renderPlayerList();
+    // Passive voice listening: newcomer is handled by existing users via ID comparison
+    setupVoiceConnection(player.id);
   }
 });
+
+function setupVoiceConnection(peerId) {
+  if (peers[peerId]) return;
+  // Standard mesh logic: one side initiates
+  if (myId < peerId) {
+    console.log('[Voice] Initiating passive connection to:', peerId);
+    initiateCall(peerId);
+  }
+}
+
+// ─── Spatial Audio Zones ──────────────────────────────────────────────────────
+function getZoneId(x, y) {
+  if (!currentMap || !currentMap.zones) return 'global';
+  for (const zone of currentMap.zones) {
+    if (x >= zone.rect.minX && x <= zone.rect.maxX &&
+        y >= zone.rect.minY && y <= zone.rect.maxY) {
+      return zone.id;
+    }
+  }
+  return 'global';
+}
+
+function updateIsolation() {
+  const pMe = players[myId];
+  if (!pMe || !currentMap) return;
+  
+  const myZone = getZoneId(pMe.x, pMe.y);
+  
+  // Update UI indicator
+  const zoneIndicator = document.getElementById('zone-indicator');
+  if (zoneIndicator) {
+    if (myZone !== 'global') {
+      const zoneDef = currentMap.zones.find(z => z.id === myZone);
+      zoneIndicator.textContent = `🎧 Zona Privada: ${zoneDef ? zoneDef.name : ''}`;
+      zoneIndicator.classList.remove('hidden');
+      zoneIndicator.classList.add('active');
+    } else {
+      zoneIndicator.classList.add('hidden');
+      zoneIndicator.classList.remove('active');
+    }
+  }
+
+  // Mute/unmute remote audios and screen shares
+  Object.keys(peers).forEach(peerId => {
+    const pPeer = players[peerId];
+    if (!pPeer) return;
+    const peerZone = getZoneId(pPeer.x, pPeer.y);
+    const audioEl = document.getElementById(`audio-${peerId}`);
+    
+    let canHearAndSee = false;
+    if (myZone === 'global' && peerZone === 'global') {
+      canHearAndSee = true; // both outside
+    } else if (myZone === peerZone && myZone !== 'global') {
+      canHearAndSee = true; // both in same private zone
+    }
+    
+    // Voice Isolation
+    if (audioEl) {
+      audioEl.muted = !canHearAndSee;
+    }
+    
+    const avatarEl = getAvatarEl(peerId);
+    if (avatarEl) {
+      if (!canHearAndSee) {
+         avatarEl.classList.add('muted-zone');
+      } else {
+         avatarEl.classList.remove('muted-zone');
+      }
+    }
+
+    // Screen Sharing Isolation
+    if (pPeer.screenActive) {
+      if (canHearAndSee) {
+        if (!screenPeers[peerId]) {
+          addScreenCard(peerId, pPeer.name);
+          initiateScreenCall(peerId);
+        }
+      } else {
+        if (screenPeers[peerId]) {
+          removeScreenCard(peerId);
+        }
+      }
+    }
+  });
+}
 
 socket.on('player:moved', ({ id, x, y }) => {
   if (!players[id]) return;
@@ -282,6 +386,9 @@ socket.on('player:moved', ({ id, x, y }) => {
   players[id].y = y;
   const el = getAvatarEl(id);
   if (el) positionAvatar(el, x, y);
+  
+  // Update audio and screen when anyone moves
+  updateIsolation();
 });
 
 socket.on('player:left', (id) => {
@@ -336,6 +443,10 @@ socket.on('chat:message', (msg) => {
   appendMessage(msg);
 });
 
+socket.on('chat:reaction', ({ messageId, emoji, senderId }) => {
+  updateMessageReactions(messageId, emoji, senderId);
+});
+
 function appendMessage(msg) {
   const isMe = msg.senderId === myId;
 
@@ -347,17 +458,81 @@ function appendMessage(msg) {
 
   const msgEl = document.createElement('div');
   msgEl.className = `chat-msg ${isMe ? 'is-me' : ''}`;
+  msgEl.id = `chat-msg-${msg.id}`;
 
   msgEl.innerHTML = `
     <div class="chat-msg-header">
       <span class="chat-msg-sender">${msg.senderAvatar} ${msg.senderName}</span>
       <span class="chat-msg-time">${msg.time}</span>
     </div>
-    <div class="chat-msg-text">${msg.text}</div>
+    <div class="chat-msg-body">
+      <div class="chat-msg-text">${msg.text}</div>
+      <div class="msg-actions">
+        <button class="btn-react" title="Reaccionar">+</button>
+        <div class="reaction-picker hidden">
+          <span onclick="sendReaction('${msg.id}', '❤️')">❤️</span>
+          <span onclick="sendReaction('${msg.id}', '👍')">👍</span>
+          <span onclick="sendReaction('${msg.id}', '😂')">😂</span>
+          <span onclick="sendReaction('${msg.id}', '🎉')">🎉</span>
+          <span onclick="sendReaction('${msg.id}', '😮')">😮</span>
+          <span onclick="sendReaction('${msg.id}', '😢')">😢</span>
+        </div>
+      </div>
+    </div>
+    <div class="reactions-container" id="reactions-${msg.id}"></div>
   `;
+
+  // Interaction for picker
+  const btnReact = msgEl.querySelector('.btn-react');
+  const picker = msgEl.querySelector('.reaction-picker');
+  btnReact.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // Close other pickers if any
+    document.querySelectorAll('.reaction-picker').forEach(p => {
+       if (p !== picker) p.classList.add('hidden');
+    });
+    picker.classList.toggle('hidden');
+  });
 
   chatMessages.appendChild(msgEl);
   chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Global click to close pickers
+document.addEventListener('click', () => {
+    document.querySelectorAll('.reaction-picker').forEach(p => p.classList.add('hidden'));
+});
+
+function sendReaction(messageId, emoji) {
+  socket.emit('chat:reaction', { messageId, emoji });
+}
+
+function updateMessageReactions(messageId, emoji, senderId) {
+  const container = document.getElementById(`reactions-${messageId}`);
+  if (!container) return;
+
+  // Key for reaction bubble
+  const bubbleId = `reaction-${messageId}-${emoji}`;
+  let bubble = document.getElementById(bubbleId);
+
+  if (!bubble) {
+    bubble = document.createElement('span');
+    bubble.className = 'reaction-bubble';
+    bubble.id = bubbleId;
+    bubble.dataset.count = 0;
+    bubble.innerHTML = `${emoji} <span class="count">0</span>`;
+    container.appendChild(bubble);
+  }
+
+  let count = parseInt(bubble.dataset.count);
+  count++;
+  bubble.dataset.count = count;
+  bubble.querySelector('.count').textContent = count;
+  
+  // Animation effect
+  bubble.classList.remove('pop');
+  void bubble.offsetWidth;
+  bubble.classList.add('pop');
 }
 
 function updateAvatarVoiceIndicator(id, active) {
@@ -403,6 +578,8 @@ document.addEventListener('keydown', (e) => {
   me.x = nx; me.y = ny;
   const el = getAvatarEl(myId);
   if (el) positionAvatar(el, nx, ny);
+  
+  updateIsolation();
 });
 
 // ─── Change map / room ────────────────────────────────────────────────────────
@@ -423,74 +600,86 @@ function changeMap(mapId) {
   players = {};
   chatMessages.innerHTML = ''; // Clear chat when changing room
 
+  // Cleanup voice and screen connections
+  Object.keys(peers).forEach(id => {
+    if (peers[id]) peers[id].close();
+    const el = document.getElementById(`audio-${id}`);
+    if (el) el.remove();
+  });
+  peers = {};
+
+  Object.keys(screenPeers).forEach(id => {
+    removeScreenCard(id);
+  });
+
   socket.emit('changeMap', { mapId });
 }
 
 // Redundant init handler removed
 
 // ─── Voice Chat Logic ────────────────────────────────────────────────────────
-btnVoiceToggle.addEventListener('click', toggleVoiceChat);
+btnVoiceToggle.addEventListener('click', toggleMicrophone);
 
-async function toggleVoiceChat() {
-  if (isVoiceActive) {
-    stopVoiceChat();
+async function toggleMicrophone() {
+  if (isMicActive) {
+    muteMicrophone();
   } else {
-    await startVoiceChat();
+    await unmuteMicrophone();
   }
 }
 
-async function startVoiceChat() {
+async function unmuteMicrophone() {
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    isVoiceActive = true;
-    btnVoiceToggle.classList.add('active');
-    btnVoiceToggle.innerHTML = '🎤 Voz: ON';
+    if (!localStream) {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Add track to all existing connections
+      Object.keys(peers).forEach(peerId => {
+        const pc = peers[peerId];
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+        // Force renegotiation to let others know we are sending audio
+        renegotiate(peerId);
+      });
+    } else {
+      localStream.getAudioTracks().forEach(track => track.enabled = true);
+    }
 
-    // Notify others that I've joined voice
-    socket.emit('voice:join');
+    isMicActive = true;
+    btnVoiceToggle.classList.add('active');
+    btnVoiceToggle.innerHTML = '🎤 Micro: ON';
     
-    // For anyone already in voice room, I'll initiate connection
-    // (Actually, usually the newcomer waits for others or vice-versa. 
-    // Let's say: when I join, others will see me and caller will be those who were already there).
-    // Or simpler: everyone who sees 'voice:join' from another person will try to initiate if they are also in voice.
+    socket.emit('voice:join'); // For UI indicator (speaking icon)
   } catch (err) {
     console.error('Error accessing microphone:', err);
     alert('No se pudo acceder al micrófono.');
   }
 }
 
-function stopVoiceChat() {
+function muteMicrophone() {
   if (localStream) {
-    localStream.getTracks().forEach(track => track.stop());
-    localStream = null;
+    localStream.getAudioTracks().forEach(track => track.enabled = false);
   }
-  isVoiceActive = false;
+  isMicActive = false;
   btnVoiceToggle.classList.remove('active');
-  btnVoiceToggle.innerHTML = '🎤 Activar Voz';
-
-  socket.emit('voice:leave');
-
-  // Close all peer connections
-  Object.keys(peers).forEach(peerId => {
-    if (peers[peerId]) {
-      peers[peerId].close();
-      delete peers[peerId];
-    }
-    const audioEl = document.getElementById(`audio-${peerId}`);
-    if (audioEl) audioEl.remove();
-  });
+  btnVoiceToggle.innerHTML = '🎤 Micrófono';
+  
+  socket.emit('voice:leave'); // For UI indicator
 }
 
-// Signaling events
-socket.on('voice:joined', (peerId) => {
-  if (!isVoiceActive) return;
-  // To avoid glare (both sides initiating), only the one with the "smaller" ID initiates
-  if (myId < peerId) {
-    console.log('[Voice] Initiating call to:', peerId);
-    initiateCall(peerId);
-  } else {
-    console.log('[Voice] Waiting for offer from:', peerId);
+async function renegotiate(peerId) {
+  const pc = peers[peerId];
+  if (!pc) return;
+  try {
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    socket.emit('signal', { toId: peerId, signalData: offer });
+  } catch (err) {
+    console.error('Renegotiation failed:', err);
   }
+}
+
+// Signaling events for voice are now passive (connections established on join)
+socket.on('voice:joined', (peerId) => {
+  // Just used for the speaking indicator UI
 });
 
 socket.on('voice:left', (peerId) => {
@@ -508,7 +697,6 @@ socket.on('signal', async ({ fromId, signalData, streamType }) => {
     else if (signalData.type === 'answer') await handleScreenAnswer(fromId, signalData);
     else if (signalData.candidate) await handleScreenCandidate(fromId, signalData);
   } else {
-    if (!isVoiceActive) return;
     if (signalData.type === 'offer') {
       console.log('[Voice] Received offer from:', fromId);
       await handleOffer(fromId, signalData);
@@ -642,11 +830,12 @@ function stopScreenShare() {
 
 socket.on('screen:started', ({ id, name }) => {
   if (id === myId) return;
-  addScreenCard(id, name);
-  initiateScreenCall(id);
+  if (players[id]) players[id].screenActive = true;
+  updateIsolation();
 });
 
 socket.on('screen:stopped', (id) => {
+  if (players[id]) players[id].screenActive = false;
   removeScreenCard(id);
 });
 
