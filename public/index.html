@@ -30,17 +30,19 @@
 
     <header>
       <div class="header-left">
-        <span id="map-name">🏢 Oficina</span>
+        <span id="map-name">Oficina</span>
         <span id="online-count" title="Personas en esta sala">👥 <span id="count-num">0</span></span>
       </div>
       <div class="header-center">
         <span id="my-tag"></span>
       </div>
       <div class="header-right">
-        <a href="https://evoseed.netlify.app/" target="_blank" class="btn-link">¿Quiénes somos?</a>
-
         <span class="hint-key">← ↑ ↓ →</span>
+        <button id="btn-voice-toggle">🎤 Activar Voz</button>
+        <button id="btn-screen-toggle">💻 Compartir Pantalla</button>
         <button id="btn-change-map">Cambiar sala</button>
+        <a href="https://evoseed.netlify.app/" target="_blank" class="btn-link">¿Quiénes somos?</a>
+        <span id="new-message-badge" class="hidden">🔴 Nuevo mensaje</span>
       </div>
     </header>
 
@@ -57,6 +59,19 @@
         <div id="grid-wrapper">
           <div id="grid"></div>
         </div>
+
+        <!-- Chat system -->
+        <div id="chat-container">
+          <div id="chat-header">
+            <h3>Mensajes</h3>
+            <button id="btn-minimize-chat">━</button>
+          </div>
+          <div id="chat-messages"></div>
+          <div id="chat-input-area">
+            <input id="chat-input" type="text" placeholder="Escribe un mensaje..." maxlength="200" autocomplete="off" />
+            <button id="btn-send-chat">Enviar</button>
+          </div>
+        </div>
       </section>
 
       <!-- Players panel -->
@@ -64,8 +79,25 @@
         <h2>En esta sala</h2>
         <ul id="player-list"></ul>
       </aside>
+
+      <!-- Screen Share Sidebar (Moved to right) -->
+      <aside id="screen-sidebar" class="hidden">
+        <h2>Transmisiones</h2>
+        <div id="screen-cards-container"></div>
+      </aside>
     </main>
 
+  </div>
+
+  <!-- ── Screen Focus Overlay ───────────────────────────────────── -->
+  <div id="screen-focus-overlay" class="hidden">
+    <div id="screen-focus-content">
+      <div id="screen-focus-header">
+        <span id="screen-focus-title">Vista ampliada</span>
+        <button id="btn-close-focus">✕ Cerrar vista</button>
+      </div>
+      <video id="focused-video" autoplay playsinline muted></video>
+    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>

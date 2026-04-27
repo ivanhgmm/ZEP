@@ -159,6 +159,69 @@ io.on('connection', (socket) => {
     socket.to(mapId).emit('player:joined', p);
   });
 
+  // Chat message
+  socket.on('chat:message', (text) => {
+    const p = players[socket.id];
+    if (!p || !text || text.trim() === '') return;
+
+    const messageData = {
+      id: Date.now() + Math.random().toString(36).substr(2, 9),
+      senderId: socket.id,
+      senderName: p.name,
+      senderAvatar: p.avatar,
+      text: text.trim(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    io.to(p.mapId).emit('chat:message', messageData);
+  });
+
+  // Signaling relay for WebRTC (voice or screen)
+  socket.on('signal', ({ toId, signalData, streamType }) => {
+    // Relay the signal to the specific peer
+    io.to(toId).emit('signal', {
+      fromId: socket.id,
+      signalData,
+      streamType: streamType || 'voice'
+    });
+  });
+
+  // Voice Chat status management
+  socket.on('voice:join', () => {
+    const p = players[socket.id];
+    if (p) {
+      p.voiceActive = true;
+      socket.to(p.mapId).emit('voice:joined', socket.id);
+      io.to(p.mapId).emit('player:voice-changed', { id: socket.id, voiceActive: true });
+    }
+  });
+
+  socket.on('voice:leave', () => {
+    const p = players[socket.id];
+    if (p) {
+      p.voiceActive = false;
+      socket.to(p.mapId).emit('voice:left', socket.id);
+      io.to(p.mapId).emit('player:voice-changed', { id: socket.id, voiceActive: false });
+    }
+  });
+
+  // Screen Sharing status management
+  socket.on('screen:start', () => {
+    const p = players[socket.id];
+    if (p) {
+      p.screenActive = true;
+      socket.to(p.mapId).emit('screen:started', { id: socket.id, name: p.name });
+    }
+  });
+
+  socket.on('screen:stop', () => {
+    const p = players[socket.id];
+    if (p) {
+      p.screenActive = false;
+      socket.to(p.mapId).emit('screen:stopped', socket.id);
+    }
+  });
+
   // Disconnect
   socket.on('disconnect', () => {
     const p = players[socket.id];
