@@ -87,6 +87,31 @@ function toggleChatMinimize() {
   }
 }
 
+// ─── Terms and Conditions Logic ─────────────────────────────────────────────
+const termsOverlay = document.getElementById('terms-overlay');
+const btnAcceptTerms = document.getElementById('btn-accept-terms');
+const btnDeclineTerms = document.getElementById('btn-decline-terms');
+const termsErrorMsg = document.getElementById('terms-error-msg');
+
+function checkTerms() {
+  const accepted = localStorage.getItem('zep_terms_accepted');
+  if (accepted !== 'true') {
+    termsOverlay.classList.remove('hidden');
+  }
+}
+
+btnAcceptTerms.addEventListener('click', () => {
+  localStorage.setItem('zep_terms_accepted', 'true');
+  termsOverlay.classList.add('hidden');
+});
+
+btnDeclineTerms.addEventListener('click', () => {
+  termsErrorMsg.classList.remove('hidden');
+});
+
+// Run check on load
+checkTerms();
+
 // ─── Fetch map list and build login selector ───────────────────────────────────
 async function initLogin() {
   const res = await fetch('/api/maps');

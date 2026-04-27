@@ -8,8 +8,11 @@ const server = http.createServer(app);
 const io     = new Server(server);
 const PORT   = 3000;
 
-app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/terminos-y-condiciones', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'terms.html'));
+});
 
 // ── Tile legend ──────────────────────────────────────────────────────────────
 // E=empty  F=floor  W=wall  G=grass  D=desk  C=chair
