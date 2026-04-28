@@ -118,9 +118,13 @@ io.on('connection', (socket) => {
 
   // New player joins a map
   socket.on('join', (data) => {
-    const { name, mapId } = data;
+    const { name, roomId, baseMapId, mapId } = data; // mapId for backward compatibility
+    const requestedBaseMapId = baseMapId || mapId || 'office';
+    const validBaseMapId = PRESET_MAPS[requestedBaseMapId] ? requestedBaseMapId : 'office';
+    const finalRoomId = roomId || validBaseMapId;
+    
     const avatar = data.avatar || AVATARS[Math.floor(Math.random() * AVATARS.length)];
-    const map    = PRESET_MAPS[mapId] || PRESET_MAPS['office'];
+    const map    = PRESET_MAPS[validBaseMapId];
 
     // Find a walkable spawn position
     let spawnX = 1, spawnY = 14;
@@ -132,18 +136,18 @@ io.on('connection', (socket) => {
       }
     }
 
-    players[socket.id] = { id: socket.id, name, avatar, x: spawnX, y: spawnY, mapId, screenActive: false, voiceActive: false };
+    players[socket.id] = { id: socket.id, name, avatar, x: spawnX, y: spawnY, roomId: finalRoomId, baseMapId: validBaseMapId, screenActive: false, voiceActive: false };
 
-    socket.join(mapId);
+    socket.join(finalRoomId);
 
     // Send current players on the same map to the newcomer
-    const others = Object.values(players).filter(p => p.mapId === mapId);
+    const others = Object.values(players).filter(p => p.roomId === finalRoomId);
     socket.emit('init', { players: others, myId: socket.id });
 
     // Tell others a new player arrived
-    socket.to(mapId).emit('player:joined', players[socket.id]);
+    socket.to(finalRoomId).emit('player:joined', players[socket.id]);
 
-    console.log(`  ${name} joined map "${mapId}" at (${spawnX},${spawnY})`);
+    console.log(`  ${name} joined room "${finalRoomId}" (Map: ${validBaseMapId}) at (${spawnX},${spawnY})`);
   });
 
   // Player moves
@@ -151,7 +155,7 @@ io.on('connection', (socket) => {
     const p = players[socket.id];
     if (!p) return;
 
-    const map = PRESET_MAPS[p.mapId];
+    const map = PRESET_MAPS[p.baseMapId];
     if (!map) return;
 
     // Collision check: only allow walkable tiles
@@ -160,24 +164,31 @@ io.on('connection', (socket) => {
     if (!walkable.includes(tileType)) return;
 
     p.x = x; p.y = y;
-    io.to(p.mapId).emit('player:moved', { id: socket.id, x, y });
+    io.to(p.roomId).emit('player:moved', { id: socket.id, x, y });
   });
 
   // Player changes map room
-  socket.on('changeMap', ({ mapId }) => {
+  socket.on('changeMap', (data) => {
     const p = players[socket.id];
-    if (!p || !PRESET_MAPS[mapId]) return;
+    if (!p) return;
+    
+    // Support either {mapId} or {roomId, baseMapId}
+    const { roomId, baseMapId, mapId } = data;
+    const requestedBaseMapId = baseMapId || mapId || 'office';
+    const validBaseMapId = PRESET_MAPS[requestedBaseMapId] ? requestedBaseMapId : 'office';
+    const finalRoomId = roomId || validBaseMapId;
 
-    socket.leave(p.mapId);
-    socket.to(p.mapId).emit('player:left', socket.id);
+    socket.leave(p.roomId);
+    socket.to(p.roomId).emit('player:left', socket.id);
 
-    p.mapId = mapId;
+    p.roomId = finalRoomId;
+    p.baseMapId = validBaseMapId;
     p.x = 1; p.y = 14;
-    socket.join(mapId);
+    socket.join(finalRoomId);
 
-    const others = Object.values(players).filter(pl => pl.mapId === mapId);
+    const others = Object.values(players).filter(pl => pl.roomId === finalRoomId);
     socket.emit('init', { players: others, myId: socket.id });
-    socket.to(mapId).emit('player:joined', p);
+    socket.to(finalRoomId).emit('player:joined', p);
   });
 
   // Chat message
@@ -194,7 +205,7 @@ io.on('connection', (socket) => {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    io.to(p.mapId).emit('chat:message', messageData);
+    io.to(p.roomId).emit('chat:message', messageData);
   });
 
   // Chat reaction
@@ -202,7 +213,7 @@ io.on('connection', (socket) => {
     const p = players[socket.id];
     if (!p || !messageId || !emoji) return;
 
-    io.to(p.mapId).emit('chat:reaction', {
+    io.to(p.roomId).emit('chat:reaction', {
       messageId,
       emoji,
       senderId: socket.id
@@ -224,8 +235,8 @@ io.on('connection', (socket) => {
     const p = players[socket.id];
     if (p) {
       p.voiceActive = true;
-      socket.to(p.mapId).emit('voice:joined', socket.id);
-      io.to(p.mapId).emit('player:voice-changed', { id: socket.id, voiceActive: true });
+      socket.to(p.roomId).emit('voice:joined', socket.id);
+      io.to(p.roomId).emit('player:voice-changed', { id: socket.id, voiceActive: true });
     }
   });
 
@@ -233,8 +244,8 @@ io.on('connection', (socket) => {
     const p = players[socket.id];
     if (p) {
       p.voiceActive = false;
-      socket.to(p.mapId).emit('voice:left', socket.id);
-      io.to(p.mapId).emit('player:voice-changed', { id: socket.id, voiceActive: false });
+      socket.to(p.roomId).emit('voice:left', socket.id);
+      io.to(p.roomId).emit('player:voice-changed', { id: socket.id, voiceActive: false });
     }
   });
 
@@ -243,7 +254,7 @@ io.on('connection', (socket) => {
     const p = players[socket.id];
     if (p) {
       p.screenActive = true;
-      socket.to(p.mapId).emit('screen:started', { id: socket.id, name: p.name });
+      socket.to(p.roomId).emit('screen:started', { id: socket.id, name: p.name });
     }
   });
 
@@ -251,7 +262,7 @@ io.on('connection', (socket) => {
     const p = players[socket.id];
     if (p) {
       p.screenActive = false;
-      socket.to(p.mapId).emit('screen:stopped', socket.id);
+      socket.to(p.roomId).emit('screen:stopped', socket.id);
     }
   });
 
@@ -259,7 +270,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const p = players[socket.id];
     if (p) {
-      socket.to(p.mapId).emit('player:left', socket.id);
+      socket.to(p.roomId).emit('player:left', socket.id);
       console.log(`[-] Left: ${p.name}`);
       delete players[socket.id];
     }

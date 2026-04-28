@@ -45,6 +45,13 @@ const roomSidebar = document.getElementById('room-sidebar');
 const btnChangeMap = document.getElementById('btn-change-map');
 const btnCloseSidebar = document.getElementById('btn-close-sidebar');
 
+// ─── New Room Configuration DOM ──────────────────────────────────────────────
+const inputRoomCode = document.getElementById('input-room-code');
+const inputRoomLabel = document.getElementById('input-room-label');
+const recentRoomsContainer = document.getElementById('recent-rooms-container');
+const recentRoomsList = document.getElementById('recent-rooms-list');
+const sidebarRoomCode = document.getElementById('sidebar-room-code');
+
 // ─── Chat DOM ────────────────────────────────────────────────────────────────
 const chatMessages = document.getElementById('chat-messages');
 const chatInput = document.getElementById('chat-input');
@@ -140,6 +147,52 @@ async function initLogin() {
     li.addEventListener('click', () => changeMap(m.id));
     roomList.appendChild(li);
   });
+
+  loadRecentRooms();
+}
+
+function loadRecentRooms() {
+  const roomsStr = localStorage.getItem('zep_recent_rooms');
+  if (!roomsStr) return;
+  try {
+    const rooms = JSON.parse(roomsStr);
+    if (!rooms || rooms.length === 0) return;
+    recentRoomsContainer.classList.remove('hidden');
+    recentRoomsList.innerHTML = '';
+    rooms.forEach(room => {
+      const btn = document.createElement('button');
+      btn.className = 'recent-room-tag';
+      btn.textContent = room.label || `${room.mapName} - ${room.code}`;
+      
+      btn.addEventListener('click', () => {
+        selectedMapId = room.mapId;
+        mapSelector.querySelectorAll('.map-option').forEach(b => b.classList.remove('active'));
+        const activeBtn = mapSelector.querySelector(`.map-option[data-id="${room.mapId}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+        inputRoomCode.value = room.code;
+        inputRoomLabel.value = room.label || '';
+        inputName.focus();
+      });
+      recentRoomsList.appendChild(btn);
+    });
+  } catch (e) {
+    console.error('Error loading recent rooms', e);
+  }
+}
+
+function saveRecentRoom(mapId, mapName, code, label) {
+  if (!code) return;
+  let rooms = [];
+  try {
+    const str = localStorage.getItem('zep_recent_rooms');
+    if (str) rooms = JSON.parse(str);
+  } catch(e) {}
+  
+  rooms = rooms.filter(r => !(r.mapId === mapId && r.code === code));
+  rooms.unshift({ mapId, mapName, code, label });
+  if (rooms.length > 5) rooms = rooms.slice(0, 5);
+  localStorage.setItem('zep_recent_rooms', JSON.stringify(rooms));
+  loadRecentRooms();
 }
 
 function initAvatarSelector() {
@@ -180,15 +233,29 @@ function enterOffice() {
   const name = inputName.value.trim();
   if (!name) { inputName.focus(); return; }
 
+  const code = inputRoomCode.value.trim();
+  const label = inputRoomLabel.value.trim();
+
   // --- NUEVO: Guardar el nombre y avatar ---
   localStorage.setItem('savedPlayerName', name);
   localStorage.setItem('savedPlayerAvatar', myAvatar);
+
+  // find map name
+  const mapBtn = mapSelector.querySelector(`.map-option[data-id="${selectedMapId}"]`);
+  const mapName = mapBtn ? mapBtn.textContent : selectedMapId;
+  
+  if (code) {
+    saveRecentRoom(selectedMapId, mapName, code, label);
+  }
+
+  const roomId = code ? `${selectedMapId}-${code}` : selectedMapId;
+  const baseMapId = selectedMapId;
 
   myName = name;
   loginScreen.classList.add('hidden');
   app.classList.remove('hidden');
   myTagEl.textContent = ''; // will set after join confirmed
-  socket.emit('join', { name, mapId: selectedMapId, avatar: myAvatar });
+  socket.emit('join', { name, roomId, baseMapId, avatar: myAvatar });
 }
 
 // ─── Load and render map ──────────────────────────────────────────────────────
@@ -306,14 +373,25 @@ socket.on('init', ({ players: serverPlayers, myId: serverId }) => {
       setupVoiceConnection(p.id);
     }
   });
-  myTagEl.textContent = `${myName}`;
-  loadMap(selectedMapId);
+
+  const me = players[myId];
+  const baseMapId = me ? me.baseMapId : selectedMapId;
+  const currentRoomId = me ? me.roomId : selectedMapId;
+
+  const codeSuffix = currentRoomId !== baseMapId ? ` (${currentRoomId.replace(baseMapId+'-', '')})` : '';
+  myTagEl.textContent = `${myName}${codeSuffix}`;
+  
+  loadMap(baseMapId);
 });
 
 socket.on('player:joined', (player) => {
   players[player.id] = player;
-  // Only render if player is on the same map
-  if (player.mapId === currentMap?.id) {
+  
+  const me = players[myId];
+  const sameRoom = me && me.roomId === player.roomId;
+  
+  // Only render if player is on the same map and room
+  if (sameRoom) {
     createAvatar(player);
     renderPlayerList();
     // Passive voice listening: newcomer is handled by existing users via ID comparison
@@ -617,7 +695,12 @@ btnCloseSidebar.addEventListener('click', () => {
 });
 
 function changeMap(mapId) {
-  if (mapId === currentMap?.id) { roomSidebar.classList.add('hidden'); return; }
+  const code = sidebarRoomCode.value.trim();
+  const targetRoomId = code ? `${mapId}-${code}` : mapId;
+
+  const me = players[myId];
+  if (targetRoomId === me?.roomId) { roomSidebar.classList.add('hidden'); return; }
+
   selectedMapId = mapId;
   roomSidebar.classList.add('hidden');
 
@@ -638,7 +721,7 @@ function changeMap(mapId) {
     removeScreenCard(id);
   });
 
-  socket.emit('changeMap', { mapId });
+  socket.emit('changeMap', { roomId: targetRoomId, baseMapId: mapId });
 }
 
 // Redundant init handler removed
