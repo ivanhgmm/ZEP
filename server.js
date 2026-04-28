@@ -278,5 +278,5 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`ZEP Office server → http://localhost:${PORT}`);
+  console.log(`EvoGrid Office server → http://localhost:${PORT}`);
 });

@@ -17,26 +17,34 @@
       <h1>Virtual Office</h1>
       <p>Elige tu nombre y sala</p>
       <input id="input-name" type="text" placeholder="Tu nombre" maxlength="20" autocomplete="off" />
-      
-      <p class="section-label">Elige tu avatar:</p>
-      <div id="avatar-selector">
-        <!-- Avatars will be populated by app.js -->
-      </div>
+
+      <details id="avatar-accordion" class="custom-accordion">
+        <summary class="section-label" style="margin-bottom:0;">
+          Elige tu avatar
+          <span id="current-avatar-preview">🧑</span>
+        </summary>
+        <div id="avatar-selector" style="margin-top: 15px;">
+          <!-- Avatars will be populated by app.js -->
+        </div>
+      </details>
 
       <div id="map-selector">
         <!-- Populated by JS -->
       </div>
 
       <div id="custom-room-options" style="margin: 10px 0; display: flex; flex-direction: column; gap: 8px;">
-        <input id="input-room-code" type="text" placeholder="Clave de sala (opcional)" maxlength="20" autocomplete="off" />
-        <input id="input-room-label" type="text" placeholder="Etiqueta para guardar (opcional)" maxlength="30" autocomplete="off" />
+        <input id="input-room-code" type="text" placeholder="Clave de sala (opcional)" maxlength="20"
+          autocomplete="off" />
+        <input id="input-room-label" type="text" placeholder="Etiqueta para guardar (opcional)" maxlength="30"
+          autocomplete="off" />
       </div>
 
       <button id="btn-enter">Entrar</button>
 
       <div id="recent-rooms-container" class="hidden" style="margin-top: 15px;">
         <p class="section-label">Salas recientes:</p>
-        <div id="recent-rooms-list" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px;">
+        <div id="recent-rooms-list"
+          style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px;">
           <!-- Populated by JS -->
         </div>
       </div>
@@ -73,7 +81,8 @@
         <h2>Salas</h2>
         <ul id="room-list"></ul>
         <div style="margin: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
-          <input id="sidebar-room-code" type="text" placeholder="Clave de sala (opcional)" maxlength="20" autocomplete="off" style="width: 100%; box-sizing: border-box;" />
+          <input id="sidebar-room-code" type="text" placeholder="Clave de sala (opcional)" maxlength="20"
+            autocomplete="off" style="width: 100%; box-sizing: border-box;" />
         </div>
         <button id="btn-close-sidebar">✕</button>
       </aside>
@@ -100,7 +109,7 @@
 
       <!-- Players panel -->
       <aside id="players-panel">
-        <h2>En esta sala</h2>
+        <h2>Transmisiones en esta sala</h2>
         <ul id="player-list"></ul>
       </aside>
 
@@ -129,7 +138,9 @@
     <div id="terms-box">
       <h2>Términos y Condiciones</h2>
       <div id="terms-content-text">
-        <p>Para continuar, debes aceptar que ZEP Office <strong>no guardará ni gestionará ningún dato personal</strong> del usuario. Todo es efímero y para fines de colaboración.</p>
+        <p>Para continuar, debes aceptar que EvoGrid Office <strong>no guardará ni gestionará ningún dato
+            personal</strong>
+          del usuario. Todo es efímero y para fines de colaboración.</p>
         <p><a href="/terminos-y-condiciones" target="_blank">Leer versión completa</a></p>
       </div>
       <div id="terms-error-msg" class="hidden">

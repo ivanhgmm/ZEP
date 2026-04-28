@@ -1,7 +1,7 @@
 {
-  "name": "zep-web",
+  "name": "evogrid-web",
   "version": "1.0.0",
-  "description": "ZEP-style 16x16 map editor web app",
+  "description": "evogrid-style 16x16 map editor web app",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

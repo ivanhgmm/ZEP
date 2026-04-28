@@ -91,7 +91,7 @@ function toggleChatMinimize() {
   chatContainer.classList.toggle('minimized');
   const isMinimized = chatContainer.classList.contains('minimized');
   btnMinimizeChat.textContent = isMinimized ? '▲' : '━';
-  
+
   // If expanding, scroll to bottom
   if (!isMinimized) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -105,14 +105,14 @@ const btnDeclineTerms = document.getElementById('btn-decline-terms');
 const termsErrorMsg = document.getElementById('terms-error-msg');
 
 function checkTerms() {
-  const accepted = localStorage.getItem('zep_terms_accepted');
+  const accepted = localStorage.getItem('evogrid_terms_accepted');
   if (accepted !== 'true') {
     termsOverlay.classList.remove('hidden');
   }
 }
 
 btnAcceptTerms.addEventListener('click', () => {
-  localStorage.setItem('zep_terms_accepted', 'true');
+  localStorage.setItem('evogrid_terms_accepted', 'true');
   termsOverlay.classList.add('hidden');
 });
 
@@ -152,7 +152,7 @@ async function initLogin() {
 }
 
 function loadRecentRooms() {
-  const roomsStr = localStorage.getItem('zep_recent_rooms');
+  const roomsStr = localStorage.getItem('evogrid_recent_rooms');
   if (!roomsStr) return;
   try {
     const rooms = JSON.parse(roomsStr);
@@ -163,7 +163,7 @@ function loadRecentRooms() {
       const btn = document.createElement('button');
       btn.className = 'recent-room-tag';
       btn.textContent = room.label || `${room.mapName} - ${room.code}`;
-      
+
       btn.addEventListener('click', () => {
         selectedMapId = room.mapId;
         mapSelector.querySelectorAll('.map-option').forEach(b => b.classList.remove('active'));
@@ -184,14 +184,14 @@ function saveRecentRoom(mapId, mapName, code, label) {
   if (!code) return;
   let rooms = [];
   try {
-    const str = localStorage.getItem('zep_recent_rooms');
+    const str = localStorage.getItem('evogrid_recent_rooms');
     if (str) rooms = JSON.parse(str);
-  } catch(e) {}
-  
+  } catch (e) { }
+
   rooms = rooms.filter(r => !(r.mapId === mapId && r.code === code));
   rooms.unshift({ mapId, mapName, code, label });
   if (rooms.length > 5) rooms = rooms.slice(0, 5);
-  localStorage.setItem('zep_recent_rooms', JSON.stringify(rooms));
+  localStorage.setItem('evogrid_recent_rooms', JSON.stringify(rooms));
   loadRecentRooms();
 }
 
@@ -199,6 +199,9 @@ function initAvatarSelector() {
   const container = document.getElementById('avatar-selector');
   const savedAvatar = localStorage.getItem('savedPlayerAvatar') || AVATARS[0];
   myAvatar = savedAvatar;
+  
+  const previewEl = document.getElementById('current-avatar-preview');
+  if (previewEl) previewEl.textContent = myAvatar;
 
   AVATARS.forEach(emoji => {
     const el = document.createElement('div');
@@ -208,6 +211,10 @@ function initAvatarSelector() {
       myAvatar = emoji;
       container.querySelectorAll('.avatar-option').forEach(a => a.classList.remove('active'));
       el.classList.add('active');
+      const previewEl = document.getElementById('current-avatar-preview');
+      if (previewEl) previewEl.textContent = emoji;
+      const accordion = document.getElementById('avatar-accordion');
+      if (accordion) accordion.removeAttribute('open');
     });
     container.appendChild(el);
   });
@@ -243,7 +250,7 @@ function enterOffice() {
   // find map name
   const mapBtn = mapSelector.querySelector(`.map-option[data-id="${selectedMapId}"]`);
   const mapName = mapBtn ? mapBtn.textContent : selectedMapId;
-  
+
   if (code) {
     saveRecentRoom(selectedMapId, mapName, code, label);
   }
@@ -340,7 +347,7 @@ function renderAllPlayers() {
   // Render all
   Object.values(players).forEach(p => createAvatar(p));
   renderPlayerList();
-  
+
   updateIsolation(); // Apply isolation logic on full render
 }
 
@@ -353,7 +360,7 @@ function renderPlayerList() {
   here.forEach(p => {
     const li = document.createElement('li');
     if (p.id === myId) li.classList.add('is-me');
-    
+
     const voiceIcon = p.voiceActive ? '<span class="speaking-indicator"></span>' : '';
     li.innerHTML = `<span>${p.avatar}</span><span class="p-name">${p.name}${p.id === myId ? ' (tú)' : ''}</span> ${voiceIcon}`;
     playerList.appendChild(li);
@@ -363,11 +370,11 @@ function renderPlayerList() {
 socket.on('init', ({ players: serverPlayers, myId: serverId }) => {
   if (serverId) myId = serverId;
   players = {};
-  serverPlayers.forEach(p => { 
-    players[p.id] = p; 
+  serverPlayers.forEach(p => {
+    players[p.id] = p;
     // Screen sharing and isolation filtering will be handled by updateIsolation()
     // after the map is fully loaded in loadMap().
-    
+
     // Also initiate voice connection with everyone (Passive listening)
     if (p.id !== myId) {
       setupVoiceConnection(p.id);
@@ -378,18 +385,18 @@ socket.on('init', ({ players: serverPlayers, myId: serverId }) => {
   const baseMapId = me ? me.baseMapId : selectedMapId;
   const currentRoomId = me ? me.roomId : selectedMapId;
 
-  const codeSuffix = currentRoomId !== baseMapId ? ` (${currentRoomId.replace(baseMapId+'-', '')})` : '';
+  const codeSuffix = currentRoomId !== baseMapId ? ` (${currentRoomId.replace(baseMapId + '-', '')})` : '';
   myTagEl.textContent = `${myName}${codeSuffix}`;
-  
+
   loadMap(baseMapId);
 });
 
 socket.on('player:joined', (player) => {
   players[player.id] = player;
-  
+
   const me = players[myId];
   const sameRoom = me && me.roomId === player.roomId;
-  
+
   // Only render if player is on the same map and room
   if (sameRoom) {
     createAvatar(player);
@@ -413,7 +420,7 @@ function getZoneId(x, y) {
   if (!currentMap || !currentMap.zones) return 'global';
   for (const zone of currentMap.zones) {
     if (x >= zone.rect.minX && x <= zone.rect.maxX &&
-        y >= zone.rect.minY && y <= zone.rect.maxY) {
+      y >= zone.rect.minY && y <= zone.rect.maxY) {
       return zone.id;
     }
   }
@@ -423,9 +430,9 @@ function getZoneId(x, y) {
 function updateIsolation() {
   const pMe = players[myId];
   if (!pMe || !currentMap) return;
-  
+
   const myZone = getZoneId(pMe.x, pMe.y);
-  
+
   // Update UI indicator
   const zoneIndicator = document.getElementById('zone-indicator');
   if (zoneIndicator) {
@@ -446,25 +453,25 @@ function updateIsolation() {
     if (!pPeer) return;
     const peerZone = getZoneId(pPeer.x, pPeer.y);
     const audioEl = document.getElementById(`audio-${peerId}`);
-    
+
     let canHearAndSee = false;
     if (myZone === 'global' && peerZone === 'global') {
       canHearAndSee = true; // both outside
     } else if (myZone === peerZone && myZone !== 'global') {
       canHearAndSee = true; // both in same private zone
     }
-    
+
     // Voice Isolation
     if (audioEl) {
       audioEl.muted = !canHearAndSee;
     }
-    
+
     const avatarEl = getAvatarEl(peerId);
     if (avatarEl) {
       if (!canHearAndSee) {
-         avatarEl.classList.add('muted-zone');
+        avatarEl.classList.add('muted-zone');
       } else {
-         avatarEl.classList.remove('muted-zone');
+        avatarEl.classList.remove('muted-zone');
       }
     }
 
@@ -490,7 +497,7 @@ socket.on('player:moved', ({ id, x, y }) => {
   players[id].y = y;
   const el = getAvatarEl(id);
   if (el) positionAvatar(el, x, y);
-  
+
   // Update audio and screen when anyone moves
   updateIsolation();
 });
@@ -499,7 +506,7 @@ socket.on('player:left', (id) => {
   removeAvatar(id);
   delete players[id];
   renderPlayerList();
-  
+
   // Cleanup voice if peer left
   if (peers[id]) {
     peers[id].close();
@@ -516,7 +523,7 @@ socket.on('player:voice-changed', ({ id, voiceActive }) => {
   if (players[id]) {
     players[id].voiceActive = voiceActive;
     renderPlayerList();
-    
+
     // Toggle speaking animation on avatar
     const el = getAvatarEl(id);
     if (el) {
@@ -593,7 +600,7 @@ function appendMessage(msg) {
     e.stopPropagation();
     // Close other pickers if any
     document.querySelectorAll('.reaction-picker').forEach(p => {
-       if (p !== picker) p.classList.add('hidden');
+      if (p !== picker) p.classList.add('hidden');
     });
     picker.classList.toggle('hidden');
   });
@@ -604,7 +611,7 @@ function appendMessage(msg) {
 
 // Global click to close pickers
 document.addEventListener('click', () => {
-    document.querySelectorAll('.reaction-picker').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.reaction-picker').forEach(p => p.classList.add('hidden'));
 });
 
 function sendReaction(messageId, emoji) {
@@ -632,7 +639,7 @@ function updateMessageReactions(messageId, emoji, senderId) {
   count++;
   bubble.dataset.count = count;
   bubble.querySelector('.count').textContent = count;
-  
+
   // Animation effect
   bubble.classList.remove('pop');
   void bubble.offsetWidth;
@@ -682,7 +689,7 @@ document.addEventListener('keydown', (e) => {
   me.x = nx; me.y = ny;
   const el = getAvatarEl(myId);
   if (el) positionAvatar(el, nx, ny);
-  
+
   updateIsolation();
 });
 
@@ -755,7 +762,7 @@ async function unmuteMicrophone() {
     isMicActive = true;
     btnVoiceToggle.classList.add('active');
     btnVoiceToggle.innerHTML = '🎤 Micro: ON';
-    
+
     socket.emit('voice:join'); // For UI indicator (speaking icon)
   } catch (err) {
     console.error('Error accessing microphone:', err);
@@ -770,7 +777,7 @@ function muteMicrophone() {
   isMicActive = false;
   btnVoiceToggle.classList.remove('active');
   btnVoiceToggle.innerHTML = '🎤 Micrófono';
-  
+
   socket.emit('voice:leave'); // For UI indicator
 }
 
@@ -1067,7 +1074,7 @@ function createScreenPeerConnection(peerId, isSharer) {
       screenPeers[peerId].videoEl.play().catch(e => console.log("[Screen] Autoplay blocked", e));
       if (focusedPeerId === peerId) {
         focusedVideo.srcObject = event.streams[0];
-        focusedVideo.play().catch(e => {});
+        focusedVideo.play().catch(e => { });
       }
     }
   };
