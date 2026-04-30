@@ -148,6 +148,47 @@ async function initLogin() {
     roomList.appendChild(li);
   });
 
+  // Parse URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const roomParam = urlParams.get('room');
+  if (roomParam) {
+    let parsedMapId = 'office';
+    let parsedCode = '';
+    const mapIds = maps.map(m => m.id);
+    
+    const dashIndex = roomParam.indexOf('-');
+    if (dashIndex > 0) {
+      const potentialMapId = roomParam.substring(0, dashIndex);
+      if (mapIds.includes(potentialMapId)) {
+        parsedMapId = potentialMapId;
+        parsedCode = roomParam.substring(dashIndex + 1);
+      } else {
+        parsedMapId = 'office';
+        parsedCode = roomParam;
+      }
+    } else {
+      if (mapIds.includes(roomParam)) {
+        parsedMapId = roomParam;
+      } else {
+        parsedMapId = 'office';
+        parsedCode = roomParam;
+      }
+    }
+
+    selectedMapId = parsedMapId;
+    mapSelector.querySelectorAll('.map-option').forEach(b => {
+      b.classList.remove('active');
+      if (b.dataset.id === selectedMapId) b.classList.add('active');
+    });
+    if (parsedCode) {
+      inputRoomCode.value = parsedCode;
+    }
+
+    if (localStorage.getItem('savedPlayerName')) {
+      setTimeout(enterOffice, 300);
+    }
+  }
+
   loadRecentRooms();
 }
 
@@ -257,6 +298,10 @@ function enterOffice() {
 
   const roomId = code ? `${selectedMapId}-${code}` : selectedMapId;
   const baseMapId = selectedMapId;
+
+  // Update URL
+  const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?room=' + roomId;
+  window.history.replaceState({path: newUrl}, '', newUrl);
 
   myName = name;
   loginScreen.classList.add('hidden');
@@ -671,6 +716,21 @@ document.addEventListener('keydown', (e) => {
   // If user is typing in chat input, don't move the character
   if (document.activeElement === chatInput) return;
 
+  // --- Nudge (Zumbido) ---
+  if (e.key === 'x' || e.key === 'X') {
+    const me = players[myId];
+    if (!me) return;
+    // Check for players nearby (1 tile range)
+    for (const pId in players) {
+      if (pId === myId) continue;
+      const p = players[pId];
+      if (p.roomId === me.roomId && Math.abs(p.x - me.x) <= 1 && Math.abs(p.y - me.y) <= 1) {
+        socket.emit('player:nudge', { toId: p.id });
+      }
+    }
+    return;
+  }
+
   const dir = DIRS[e.key];
   if (!dir) return;
   e.preventDefault();
@@ -707,6 +767,10 @@ function changeMap(mapId) {
 
   const me = players[myId];
   if (targetRoomId === me?.roomId) { roomSidebar.classList.add('hidden'); return; }
+
+  // Update URL
+  const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?room=' + targetRoomId;
+  window.history.replaceState({path: newUrl}, '', newUrl);
 
   selectedMapId = mapId;
   roomSidebar.classList.add('hidden');
@@ -1112,3 +1176,36 @@ function updateNewMessageIndicator() {
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 initLogin();
+
+// ─── Nudge (Zumbido) Logic ───────────────────────────────────────────────────
+socket.on('player:nudge', ({ fromId, senderName }) => {
+  // Play buzz sound
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    // Low frequency sawtooth for a buzz
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(50, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(70, ctx.currentTime + 0.1);
+    osc.frequency.linearRampToValueAtTime(50, ctx.currentTime + 0.2);
+    
+    gain.gain.setValueAtTime(0.5, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+  } catch(e) {
+    notificationSound.play().catch(()=>{});
+  }
+  
+  // Shake the screen
+  document.body.classList.remove('nudge-shake');
+  void document.body.offsetWidth; // Trigger reflow
+  document.body.classList.add('nudge-shake');
+});

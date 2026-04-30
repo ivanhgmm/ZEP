@@ -266,6 +266,15 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Nudge (Zumbido) event
+  socket.on('player:nudge', ({ toId }) => {
+    const p = players[socket.id];
+    if (!p) return;
+    io.to(toId).emit('player:nudge', { fromId: socket.id, senderName: p.name });
+    // Also emit back to the sender so they feel the shake too
+    socket.emit('player:nudge', { fromId: socket.id, senderName: p.name });
+  });
+
   // Disconnect
   socket.on('disconnect', () => {
     const p = players[socket.id];
