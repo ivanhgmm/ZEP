@@ -123,6 +123,35 @@ btnDeclineTerms.addEventListener('click', () => {
 // Run check on load
 checkTerms();
 
+// ─── Theme Toggle Logic ──────────────────────────────────────────────────────
+const btnThemeToggle = document.getElementById('btn-theme-toggle');
+const themeIcon = document.getElementById('theme-icon');
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('evogrid_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeIcon(savedTheme);
+}
+
+function updateThemeIcon(theme) {
+  if (themeIcon) {
+    themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
+  }
+}
+
+if (btnThemeToggle) {
+  btnThemeToggle.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('evogrid_theme', newTheme);
+    updateThemeIcon(newTheme);
+  });
+}
+
+// Initial call
+initTheme();
+
 // ─── Fetch map list and build login selector ───────────────────────────────────
 async function initLogin() {
   const res = await fetch('/api/maps');

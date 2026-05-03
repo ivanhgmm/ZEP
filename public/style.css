@@ -16,7 +16,65 @@
   --text: #dde1f0;
   --muted: #6b7194;
   --cell: 40px;
+  --tile-empty: #252538;
+  --tile-floor: #2e2e48;
+  --tile-wall: #111122;
+  --tile-grass: #1e3d1e;
+  --tile-desk: #3a2d1a;
+  --tile-chair: #2a2020;
+  --tile-meeting: #1a2a3a;
+  --tile-plant: #1a2e1a;
+  --tile-bathroom: #1a2030;
+  --tile-reception: #2a1a2e;
+  --tile-sofa: #2e1e10;
+  --tile-coffee: #201818;
+  --tile-door: #2a1010;
+  --grid-line: rgba(255, 255, 255, 0.06);
 }
+
+[data-theme="light"] {
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --border: #e0e2e8;
+  --accent: #4a5ee2;
+  --danger: #e84118;
+  --text: #1d2129;
+  --muted: #86909c;
+  --tile-empty: #ebedf0;
+  --tile-floor: #f2f3f5;
+  --tile-wall: #4e5969;
+  --tile-grass: #d1f7c4;
+  --tile-desk: #fee0c1;
+  --tile-chair: #fbd3af;
+  --tile-meeting: #e6f4ff;
+  --tile-plant: #b7f4bd;
+  --tile-bathroom: #f6f7f9;
+  --tile-reception: #fbe0fc;
+  --tile-sofa: #ffd6d6;
+  --tile-coffee: #ffecec;
+  --tile-door: #b88230;
+  --grid-line: rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Light Mode Element Overrides ───────────────────────────── */
+[data-theme="light"] .reaction-bubble { background: rgba(0, 0, 0, 0.05); }
+[data-theme="light"] .custom-accordion { background: rgba(0, 0, 0, 0.02); }
+[data-theme="light"] .custom-accordion[open] { background: rgba(0, 0, 0, 0.05); }
+[data-theme="light"] .avatar-option:hover { background: rgba(0, 0, 0, 0.05); }
+[data-theme="light"] .avatar-option { background: var(--panel); }
+[data-theme="light"] .recent-room-tag { background: rgba(0, 0, 0, 0.05); border-color: rgba(0,0,0,0.1); color: var(--text); }
+[data-theme="light"] #login-box { box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1); }
+[data-theme="light"] #chat-container { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); background: rgba(255, 255, 255, 0.85); }
+[data-theme="light"] #chat-header { background: rgba(0, 0, 0, 0.05); }
+[data-theme="light"] #player-list li { background: rgba(0, 0, 0, 0.04); }
+[data-theme="light"] .btn-link { background-color: rgba(0, 0, 0, 0.1); color: var(--text); }
+[data-theme="light"] .btn-link:hover { color: #fff; }
+[data-theme="light"] .screen-card { background: rgba(0, 0, 0, 0.03); }
+[data-theme="light"] #screen-focus-overlay { background: rgba(255, 255, 255, 0.9); }
+[data-theme="light"] #terms-box { box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1); }
+[data-theme="light"] #current-avatar-preview { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+[data-theme="light"] .player-avatar .avatar-label { background: rgba(255,255,255, 0.85); color: var(--text); border: 1px solid rgba(0,0,0,0.1); }
+[data-theme="light"] .player-avatar.is-me .avatar-label { background: var(--accent); color: white; }
 
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -442,19 +500,7 @@ header {
 }
 
 #btn-change-map {
-  padding: 6px 14px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-#btn-change-map:hover {
-  border-color: var(--accent);
-  background: rgba(92, 110, 248, 0.1);
+  display: none;
 }
 
 main {
@@ -534,7 +580,7 @@ main {
   overflow: hidden;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.7);
   /* no pointer events — read-only map */
-  background: #1e1e2f;
+  background: var(--bg);
 }
 
 #grid {
@@ -552,64 +598,26 @@ main {
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid var(--grid-line);
+  border-bottom: 1px solid var(--grid-line);
   position: relative;
   user-select: none;
 }
 
 /* Tile colours */
-.tile-empty {
-  background: #252538;
-}
-
-.tile-floor {
-  background: #2e2e48;
-}
-
-.tile-wall {
-  background: #111122;
-}
-
-.tile-grass {
-  background: #1e3d1e;
-}
-
-.tile-desk {
-  background: #3a2d1a;
-}
-
-.tile-chair {
-  background: #2a2020;
-}
-
-.tile-meeting {
-  background: #1a2a3a;
-}
-
-.tile-plant {
-  background: #1a2e1a;
-}
-
-.tile-bathroom {
-  background: #1a2030;
-}
-
-.tile-reception {
-  background: #2a1a2e;
-}
-
-.tile-sofa {
-  background: #2e1e10;
-}
-
-.tile-coffee {
-  background: #201818;
-}
-
-.tile-door {
-  background: #2a1010;
-}
+.tile-empty { background: var(--tile-empty); }
+.tile-floor { background: var(--tile-floor); }
+.tile-wall { background: var(--tile-wall); }
+.tile-grass { background: var(--tile-grass); }
+.tile-desk { background: var(--tile-desk); }
+.tile-chair { background: var(--tile-chair); }
+.tile-meeting { background: var(--tile-meeting); }
+.tile-plant { background: var(--tile-plant); }
+.tile-bathroom { background: var(--tile-bathroom); }
+.tile-reception { background: var(--tile-reception); }
+.tile-sofa { background: var(--tile-sofa); }
+.tile-coffee { background: var(--tile-coffee); }
+.tile-door { background: var(--tile-door); }
 
 /* icons shown via pseudo‑elements / textContent in JS */
 
@@ -1287,4 +1295,64 @@ main {
 
 .nudge-shake {
   animation: nudgeShake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* ─── Floating Toolbar ───────────────────────────────────────── */
+#floating-toolbar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+  background: rgba(28, 28, 48, 0.85); /* fallback */
+  background: rgba(var(--panel-rgb, 28, 28, 48), 0.85); 
+  background-color: var(--panel);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 12px 24px;
+  border-radius: 9999px; /* Pill shape */
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  align-items: center;
+}
+
+[data-theme="light"] #floating-toolbar {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.toolbar-btn {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 64px;
+}
+
+.toolbar-btn:hover {
+  background: rgba(92, 110, 248, 0.15);
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.toolbar-btn.active-state {
+  background: var(--accent);
+  color: white;
+}
+
+.toolbar-icon {
+  font-size: 1.4rem;
+}
+
+.toolbar-label {
+  font-size: 0.75rem;
+  font-weight: 500;
 }

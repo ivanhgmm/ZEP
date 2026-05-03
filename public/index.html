@@ -67,9 +67,6 @@
       </div>
       <div class="header-right">
         <span class="hint-key">← ↑ ↓ →</span>
-        <button id="btn-voice-toggle">🎤 Activar Voz</button>
-        <button id="btn-screen-toggle">💻 Compartir Pantalla</button>
-        <button id="btn-change-map">Cambiar sala</button>
         <a href="https://evoseed.netlify.app/" target="_blank" class="btn-link">¿Quiénes somos?</a>
         <span id="new-message-badge" class="hidden">🔴 Nuevo mensaje</span>
       </div>
@@ -119,6 +116,26 @@
         <div id="screen-cards-container"></div>
       </aside>
     </main>
+
+    <!-- Floating Toolbar -->
+    <div id="floating-toolbar">
+      <button id="btn-voice-toggle" class="toolbar-btn">
+        <span class="toolbar-icon">🎤</span>
+        <span class="toolbar-label">Voz</span>
+      </button>
+      <button id="btn-screen-toggle" class="toolbar-btn">
+        <span class="toolbar-icon">💻</span>
+        <span class="toolbar-label">Compartir</span>
+      </button>
+      <button id="btn-change-map" class="toolbar-btn">
+        <span class="toolbar-icon">🚪</span>
+        <span class="toolbar-label">Salas</span>
+      </button>
+      <button id="btn-theme-toggle" class="toolbar-btn">
+        <span class="toolbar-icon" id="theme-icon">☀️</span>
+        <span class="toolbar-label">Tema</span>
+      </button>
+    </div>
 
   </div>
 
