@@ -71,7 +71,7 @@
 [data-theme="light"] .btn-link:hover { color: #fff; }
 [data-theme="light"] .screen-card { background: rgba(0, 0, 0, 0.03); }
 [data-theme="light"] #screen-focus-overlay { background: rgba(255, 255, 255, 0.9); }
-[data-theme="light"] #terms-box { box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1); }
+[data-theme="light"] .modal-box { box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1); }
 [data-theme="light"] #current-avatar-preview { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 [data-theme="light"] .player-avatar .avatar-label { background: rgba(255,255,255, 0.85); color: var(--text); border: 1px solid rgba(0,0,0,0.1); }
 [data-theme="light"] .player-avatar.is-me .avatar-label { background: var(--accent); color: white; }
@@ -1173,7 +1173,7 @@ main {
 }
 
 /* ─── Terms and Conditions Modal ────────────────────────────── */
-#terms-overlay {
+#terms-overlay, #donations-overlay {
   position: fixed;
   inset: 0;
   background: rgba(18, 18, 31, 0.95);
@@ -1185,7 +1185,7 @@ main {
   padding: 20px;
 }
 
-#terms-box {
+.modal-box {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -1199,13 +1199,13 @@ main {
   animation: fadeIn 0.4s ease-out;
 }
 
-#terms-box h2 {
+.modal-box h2 {
   color: var(--accent);
   font-size: 1.5rem;
   text-align: center;
 }
 
-#terms-content-text p {
+#terms-content-text p, .donations-content p, .donations-content ul {
   color: var(--text);
   line-height: 1.6;
   font-size: 0.95rem;
@@ -1236,12 +1236,12 @@ main {
   margin: 0;
 }
 
-#terms-actions {
+#terms-actions, #donations-actions {
   display: flex;
   gap: 12px;
 }
 
-#terms-actions button {
+#terms-actions button, #donations-actions button, #donations-actions a {
   flex: 1;
   padding: 12px;
   border-radius: 8px;
@@ -1249,26 +1249,27 @@ main {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
 }
 
-#btn-decline-terms {
+.btn-secondary {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--muted);
 }
 
-#btn-decline-terms:hover {
+.btn-secondary:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text);
 }
 
-#btn-accept-terms {
+.btn-primary {
   background: var(--accent);
   border: none;
   color: white;
 }
 
-#btn-accept-terms:hover {
+.btn-primary:hover {
   background: #4456d8;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(92, 110, 248, 0.3);

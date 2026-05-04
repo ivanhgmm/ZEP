@@ -14,13 +14,13 @@
   <!-- ── Login overlay ─────────────────────────────────────────── -->
   <div id="login-screen">
     <div id="login-box">
-      <h1>Virtual Office</h1>
-      <p>Elige tu nombre y sala</p>
-      <input id="input-name" type="text" placeholder="Tu nombre" maxlength="20" autocomplete="off" />
+      <h1 data-i18n="title_office">Virtual Office</h1>
+      <p data-i18n="subtitle_login">Elige tu nombre y sala</p>
+      <input id="input-name" type="text" data-i18n-placeholder="ph_name" placeholder="Tu nombre" maxlength="20" autocomplete="off" />
 
       <details id="avatar-accordion" class="custom-accordion">
         <summary class="section-label" style="margin-bottom:0;">
-          Elige tu avatar
+          <span data-i18n="choose_avatar">Elige tu avatar</span>
           <span id="current-avatar-preview">🧑</span>
         </summary>
         <div id="avatar-selector" style="margin-top: 15px;">
@@ -33,23 +33,23 @@
       </div>
 
       <div id="custom-room-options" style="margin: 10px 0; display: flex; flex-direction: column; gap: 8px;">
-        <input id="input-room-code" type="text" placeholder="Clave de sala (opcional)" maxlength="20"
+        <input id="input-room-code" type="text" data-i18n-placeholder="ph_room_code" placeholder="Clave de sala (opcional)" maxlength="20"
           autocomplete="off" />
-        <input id="input-room-label" type="text" placeholder="Etiqueta para guardar (opcional)" maxlength="30"
+        <input id="input-room-label" type="text" data-i18n-placeholder="ph_room_label" placeholder="Etiqueta para guardar (opcional)" maxlength="30"
           autocomplete="off" />
       </div>
 
-      <button id="btn-enter">Entrar</button>
+      <button id="btn-enter" data-i18n="btn_enter">Entrar</button>
 
       <div id="recent-rooms-container" class="hidden" style="margin-top: 15px;">
-        <p class="section-label">Salas recientes:</p>
+        <p class="section-label" data-i18n="recent_rooms">Salas recientes:</p>
         <div id="recent-rooms-list"
           style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px;">
           <!-- Populated by JS -->
         </div>
       </div>
 
-      <a href="https://evoseed.netlify.app/" target="_blank" class="btn-link">¿Quiénes somos?</a>
+      <a href="https://evoseed.netlify.app/" target="_blank" class="btn-link" data-i18n="who_are_we">¿Quiénes somos?</a>
     </div>
   </div>
 
@@ -59,7 +59,7 @@
     <header>
       <div class="header-left">
         <span id="map-name">Oficina</span>
-        <span id="online-count" title="Personas en esta sala">👥 <span id="count-num">0</span></span>
+        <span id="online-count" data-i18n-title="title_people" title="Personas en esta sala">👥 <span id="count-num">0</span></span>
       </div>
       <div class="header-center">
         <span id="my-tag"></span>
@@ -67,18 +67,18 @@
       </div>
       <div class="header-right">
         <span class="hint-key">← ↑ ↓ →</span>
-        <a href="https://evoseed.netlify.app/" target="_blank" class="btn-link">¿Quiénes somos?</a>
-        <span id="new-message-badge" class="hidden">🔴 Nuevo mensaje</span>
+        <a href="https://evoseed.netlify.app/" target="_blank" class="btn-link" data-i18n="who_are_we">¿Quiénes somos?</a>
+        <span id="new-message-badge" class="hidden" data-i18n="new_message_badge">🔴 Nuevo mensaje</span>
       </div>
     </header>
 
     <main>
       <!-- Map list sidebar (hidden by default, shown on change-room) -->
       <aside id="room-sidebar" class="hidden">
-        <h2>Salas</h2>
+        <h2 data-i18n="title_rooms">Salas</h2>
         <ul id="room-list"></ul>
         <div style="margin: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
-          <input id="sidebar-room-code" type="text" placeholder="Clave de sala (opcional)" maxlength="20"
+          <input id="sidebar-room-code" type="text" data-i18n-placeholder="ph_room_code" placeholder="Clave de sala (opcional)" maxlength="20"
             autocomplete="off" style="width: 100%; box-sizing: border-box;" />
         </div>
         <button id="btn-close-sidebar">✕</button>
@@ -93,26 +93,26 @@
         <!-- Chat system -->
         <div id="chat-container">
           <div id="chat-header">
-            <h3>Mensajes</h3>
+            <h3 data-i18n="title_messages">Mensajes</h3>
             <button id="btn-minimize-chat">━</button>
           </div>
           <div id="chat-messages"></div>
           <div id="chat-input-area">
-            <input id="chat-input" type="text" placeholder="Escribe un mensaje..." maxlength="200" autocomplete="off" />
-            <button id="btn-send-chat">Enviar</button>
+            <input id="chat-input" type="text" data-i18n-placeholder="ph_chat" placeholder="Escribe un mensaje..." maxlength="200" autocomplete="off" />
+            <button id="btn-send-chat" data-i18n="btn_send">Enviar</button>
           </div>
         </div>
       </section>
 
       <!-- Players panel -->
       <aside id="players-panel">
-        <h2>Transmisiones en esta sala</h2>
+        <h2 data-i18n="title_players">Transmisiones en esta sala</h2>
         <ul id="player-list"></ul>
       </aside>
 
       <!-- Screen Share Sidebar (Moved to right) -->
       <aside id="screen-sidebar" class="hidden">
-        <h2>Transmisiones</h2>
+        <h2 data-i18n="title_screens">Transmisiones</h2>
         <div id="screen-cards-container"></div>
       </aside>
     </main>
@@ -121,19 +121,27 @@
     <div id="floating-toolbar">
       <button id="btn-voice-toggle" class="toolbar-btn">
         <span class="toolbar-icon">🎤</span>
-        <span class="toolbar-label">Voz</span>
+        <span class="toolbar-label" data-i18n="tb_voice">Voz</span>
       </button>
       <button id="btn-screen-toggle" class="toolbar-btn">
         <span class="toolbar-icon">💻</span>
-        <span class="toolbar-label">Compartir</span>
+        <span class="toolbar-label" data-i18n="tb_share">Compartir</span>
       </button>
       <button id="btn-change-map" class="toolbar-btn">
         <span class="toolbar-icon">🚪</span>
-        <span class="toolbar-label">Salas</span>
+        <span class="toolbar-label" data-i18n="tb_rooms">Salas</span>
       </button>
       <button id="btn-theme-toggle" class="toolbar-btn">
         <span class="toolbar-icon" id="theme-icon">☀️</span>
-        <span class="toolbar-label">Tema</span>
+        <span class="toolbar-label" data-i18n="tb_theme">Tema</span>
+      </button>
+      <button id="btn-lang-toggle" class="toolbar-btn">
+        <span class="toolbar-icon">🌎</span>
+        <span class="toolbar-label" data-i18n="tb_lang">Idiomas</span>
+      </button>
+      <button id="btn-donations-open" class="toolbar-btn" style="background:#5c6ef81a; border: 1px solid #5c6ef833;">
+        <span class="toolbar-icon">💖</span>
+        <span class="toolbar-label" data-i18n="tb_donate" style="color: #5c6ef8;">Donar</span>
       </button>
     </div>
 
@@ -143,29 +151,52 @@
   <div id="screen-focus-overlay" class="hidden">
     <div id="screen-focus-content">
       <div id="screen-focus-header">
-        <span id="screen-focus-title">Vista ampliada</span>
-        <button id="btn-close-focus">✕ Cerrar vista</button>
+        <span id="screen-focus-title" data-i18n="focus_title">Vista ampliada</span>
+        <button id="btn-close-focus" data-i18n="focus_close">✕ Cerrar vista</button>
       </div>
       <video id="focused-video" autoplay playsinline muted></video>
     </div>
   </div>
 
+  <!-- ── Donations Modal ──────────────────────────────────────── -->
+  <div id="donations-overlay" class="hidden">
+    <div id="donations-box" class="modal-box">
+      <h2 data-i18n="donations_title">🎁 Apoya el Proyecto</h2>
+      <div class="donations-content">
+        <p data-i18n="donations_p1" style="margin-bottom:15px">EvoGrid Office (VanishGrid) es un proyecto de código abierto que busca ofrecer una nueva forma de estudiar y trabajar a distancia.</p>
+        <p><strong data-i18n="donations_features">Funciones actuales y 100% gratuitas:</strong></p>
+        <ul style="padding-left:20px; line-height:1.6; margin-bottom:15px;">
+          <li data-i18n="feat_1">🗺️ Mapas 2D interactivos en tiempo real.</li>
+          <li data-i18n="feat_2">🎤 Audio espacial y zonas de reunión privadas.</li>
+          <li data-i18n="feat_3">💻 Compartir pantalla múltiple simultánea.</li>
+          <li data-i18n="feat_4">💬 Chat rápido con emojis y animaciones dinámicas.</li>
+          <li data-i18n="feat_5">🎨 Personalización de avatares con temas claro/oscuro.</li>
+        </ul>
+        <p data-i18n="donations_p2">Si el proyecto te resulta útil, considera hacer una donación para mantener los servidores y seguir desarrollando más funcionalidades.</p>
+      </div>
+      <div id="donations-actions">
+        <button id="btn-close-donations" class="btn-secondary" data-i18n="btn_close_donations">Cerrar</button>
+        <a href="https://patreon.com" target="_blank" id="btn-support" class="btn-primary" data-i18n="btn_support" style="text-decoration:none;">Apoyar al proyecto</a>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Terms and Conditions Modal ────────────────────────────── -->
   <div id="terms-overlay" class="hidden">
-    <div id="terms-box">
-      <h2>Términos y Condiciones</h2>
+    <div id="terms-box" class="modal-box">
+      <h2 data-i18n="terms_title">Términos y Condiciones</h2>
       <div id="terms-content-text">
-        <p>Para continuar, debes aceptar que EvoGrid Office <strong>no guardará ni gestionará ningún dato
+        <p data-i18n="terms_p1">Para continuar, debes aceptar que EvoGrid Office <strong>no guardará ni gestionará ningún dato
             personal</strong>
           del usuario. Todo es efímero y para fines de colaboración.</p>
-        <p><a href="/terminos-y-condiciones" target="_blank">Leer versión completa</a></p>
+        <p><a href="/terminos-y-condiciones" target="_blank" data-i18n="terms_read_all">Leer versión completa</a></p>
       </div>
       <div id="terms-error-msg" class="hidden">
-        <p class="error">Lo sentimos, no puedes acceder a la oficina sin aceptar los términos de privacidad.</p>
+        <p class="error" data-i18n="terms_error">Lo sentimos, no puedes acceder a la oficina sin aceptar los términos de privacidad.</p>
       </div>
       <div id="terms-actions">
-        <button id="btn-decline-terms">Rechazar</button>
-        <button id="btn-accept-terms">Aceptar y Entrar</button>
+        <button id="btn-decline-terms" class="btn-secondary" data-i18n="btn_decline">Rechazar</button>
+        <button id="btn-accept-terms" class="btn-primary" data-i18n="btn_accept">Aceptar y Entrar</button>
       </div>
     </div>
   </div>

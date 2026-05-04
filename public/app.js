@@ -152,6 +152,149 @@ if (btnThemeToggle) {
 // Initial call
 initTheme();
 
+// ─── i18n & Translations ──────────────────────────────────────────────────
+const TRANSLATIONS = {
+  es: {
+    title_office: "Virtual Office",
+    subtitle_login: "Elige tu nombre y sala",
+    ph_name: "Tu nombre",
+    choose_avatar: "Elige tu avatar",
+    ph_room_code: "Clave de sala (opcional)",
+    ph_room_label: "Etiqueta para guardar (opcional)",
+    btn_enter: "Entrar",
+    recent_rooms: "Salas recientes:",
+    who_are_we: "¿Quiénes somos?",
+    title_people: "Personas en esta sala",
+    title_rooms: "Salas",
+    title_messages: "Mensajes",
+    ph_chat: "Escribe un mensaje...",
+    btn_send: "Enviar",
+    title_players: "Transmisiones en esta sala",
+    title_screens: "Transmisiones",
+    tb_voice: "Voz",
+    tb_share: "Compartir",
+    tb_rooms: "Salas",
+    tb_theme: "Tema",
+    tb_lang: "Idiomas",
+    tb_donate: "Donar",
+    focus_title: "Vista ampliada",
+    focus_close: "✕ Cerrar vista",
+    terms_title: "Términos y Condiciones",
+    terms_p1: "Para continuar, debes aceptar que EvoGrid Office <strong>no guardará ni gestionará ningún dato personal</strong> del usuario. Todo es efímero y para fines de colaboración.",
+    terms_read_all: "Leer versión completa",
+    terms_error: "Lo sentimos, no puedes acceder a la oficina sin aceptar los términos de privacidad.",
+    btn_decline: "Rechazar",
+    btn_accept: "Aceptar y Entrar",
+    donations_title: "🎁 Apoya el Proyecto",
+    donations_p1: "EvoGrid Office (VanishGrid) es un proyecto de código abierto que busca ofrecer una nueva forma de trabajar a distancia.",
+    donations_features: "Funciones actuales y gratuitas:",
+    feat_1: "🗺️ Mapas 2D interactivos en tiempo real.",
+    feat_2: "🎤 Audio espacial y zonas de reunión.",
+    feat_3: "💻 Compartir pantalla simultánea.",
+    feat_4: "💬 Chat rápido con emojis y vibración.",
+    feat_5: "🎨 Personalización de temas.",
+    donations_p2: "Si el proyecto te resulta útil, considera hacer una donación para mantener los desarrollos.",
+    btn_support: "Apoyar al proyecto",
+    btn_close_donations: "Cerrar",
+    new_message_badge: "🔴 Nuevo mensaje",
+    
+    mic_on: '<span class="toolbar-icon">🎤</span><span class="toolbar-label">Micro: ON</span>',
+    mic_off: '<span class="toolbar-icon">🎤</span><span class="toolbar-label">Voz</span>',
+    screen_on: '<span class="toolbar-icon">💻</span><span class="toolbar-label">Compartiendo...</span>',
+    screen_off: '<span class="toolbar-icon">💻</span><span class="toolbar-label">Compartir</span>',
+    alert_mic: "No se pudo acceder al micrófono.",
+    zone_ind: "🎧 Zona Privada: ",
+    you: " (tú)"
+  },
+  en: {
+    title_office: "Virtual Office",
+    subtitle_login: "Choose your name and room",
+    ph_name: "Your name",
+    choose_avatar: "Choose your avatar",
+    ph_room_code: "Room code (optional)",
+    ph_room_label: "Label to save (optional)",
+    btn_enter: "Enter",
+    recent_rooms: "Recent rooms:",
+    who_are_we: "Who are we?",
+    title_people: "People in this room",
+    title_rooms: "Rooms",
+    title_messages: "Messages",
+    ph_chat: "Type a message...",
+    btn_send: "Send",
+    title_players: "Streams in this room",
+    title_screens: "Screen Shares",
+    tb_voice: "Voice",
+    tb_share: "Share",
+    tb_rooms: "Rooms",
+    tb_theme: "Theme",
+    tb_lang: "Language",
+    tb_donate: "Donate",
+    focus_title: "Expanded view",
+    focus_close: "✕ Close view",
+    terms_title: "Terms and Conditions",
+    terms_p1: "To continue, you must agree that EvoGrid Office <strong>will not store or manage any personal data</strong>.",
+    terms_read_all: "Read full version",
+    terms_error: "Sorry, you cannot enter without accepting the privacy terms.",
+    btn_decline: "Decline",
+    btn_accept: "Accept and Enter",
+    donations_title: "🎁 Support the Project",
+    donations_p1: "EvoGrid Office (VanishGrid) is an open-source project aiming to offer a new way to study and collaborate.",
+    donations_features: "Current free features:",
+    feat_1: "🗺️ Real-time interactive 2D maps.",
+    feat_2: "🎤 Spatial audio & meeting zones.",
+    feat_3: "💻 Simultaneous multiple screen sharing.",
+    feat_4: "💬 Quick chat with emojis & nudge.",
+    feat_5: "🎨 Avatar and Theme customization.",
+    donations_p2: "If you find the project useful, please consider making a donation to support development.",
+    btn_support: "Support the project",
+    btn_close_donations: "Close",
+    new_message_badge: "🔴 New message",
+
+    mic_on: '<span class="toolbar-icon">🎤</span><span class="toolbar-label">Mic: ON</span>',
+    mic_off: '<span class="toolbar-icon">🎤</span><span class="toolbar-label">Voice</span>',
+    screen_on: '<span class="toolbar-icon">💻</span><span class="toolbar-label">Sharing...</span>',
+    screen_off: '<span class="toolbar-icon">💻</span><span class="toolbar-label">Share</span>',
+    alert_mic: "Could not access microphone.",
+    zone_ind: "🎧 Private Zone: ",
+    you: " (you)"
+  }
+};
+
+let currentLang = localStorage.getItem('evogrid_lang') || 'es';
+function t(key) { return TRANSLATIONS[currentLang][key] || key; }
+
+function updateLanguageUI() {
+  document.querySelectorAll('[data-i18n]').forEach(el => el.innerHTML = t(el.getAttribute('data-i18n')));
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder'))));
+  document.querySelectorAll('[data-i18n-title]').forEach(el => el.setAttribute('title', t(el.getAttribute('data-i18n-title'))));
+  document.documentElement.lang = currentLang;
+  
+  if (typeof isMicActive !== 'undefined' && isMicActive) btnVoiceToggle.innerHTML = t('mic_on');
+  else btnVoiceToggle.innerHTML = t('mic_off');
+  
+  if (typeof isScreenSharing !== 'undefined' && isScreenSharing) btnScreenToggle.innerHTML = t('screen_on');
+  else btnScreenToggle.innerHTML = t('screen_off');
+}
+
+const btnLangToggle = document.getElementById('btn-lang-toggle');
+if (btnLangToggle) {
+  btnLangToggle.addEventListener('click', () => {
+    currentLang = currentLang === 'es' ? 'en' : 'es';
+    localStorage.setItem('evogrid_lang', currentLang);
+    updateLanguageUI();
+    if (typeof players !== 'undefined' && Object.keys(players).length > 0) renderPlayerList();
+  });
+}
+
+const btnDonationsOpen = document.getElementById('btn-donations-open');
+const btnCloseDonations = document.getElementById('btn-close-donations');
+const donationsOverlay = document.getElementById('donations-overlay');
+if (btnDonationsOpen) btnDonationsOpen.addEventListener('click', () => donationsOverlay.classList.remove('hidden'));
+if (btnCloseDonations) btnCloseDonations.addEventListener('click', () => donationsOverlay.classList.add('hidden'));
+
+document.addEventListener('DOMContentLoaded', updateLanguageUI);
+setTimeout(updateLanguageUI, 100);
+
 // ─── Fetch map list and build login selector ───────────────────────────────────
 async function initLogin() {
   const res = await fetch('/api/maps');
@@ -436,7 +579,7 @@ function renderPlayerList() {
     if (p.id === myId) li.classList.add('is-me');
 
     const voiceIcon = p.voiceActive ? '<span class="speaking-indicator"></span>' : '';
-    li.innerHTML = `<span>${p.avatar}</span><span class="p-name">${p.name}${p.id === myId ? ' (tú)' : ''}</span> ${voiceIcon}`;
+    li.innerHTML = `<span>${p.avatar}</span><span class="p-name">${p.name}${p.id === myId ? t('you') : ''}</span> ${voiceIcon}`;
     playerList.appendChild(li);
   });
 }
@@ -512,7 +655,7 @@ function updateIsolation() {
   if (zoneIndicator) {
     if (myZone !== 'global') {
       const zoneDef = currentMap.zones.find(z => z.id === myZone);
-      zoneIndicator.textContent = `🎧 Zona Privada: ${zoneDef ? zoneDef.name : ''}`;
+      zoneIndicator.textContent = t('zone_ind') + (zoneDef ? zoneDef.name : '');
       zoneIndicator.classList.remove('hidden');
       zoneIndicator.classList.add('active');
     } else {
@@ -535,9 +678,23 @@ function updateIsolation() {
       canHearAndSee = true; // both in same private zone
     }
 
+    // Proximity audio calculation
+    const MAX_AUDIO_DIST = 10;
+    const dist = Math.sqrt(Math.pow(pMe.x - pPeer.x, 2) + Math.pow(pMe.y - pPeer.y, 2));
+    let vol = 1.0;
+    
+    if (canHearAndSee) {
+      if (dist > 0) {
+        vol = Math.max(0, 1 - (dist / MAX_AUDIO_DIST));
+      }
+    } else {
+      vol = 0;
+    }
+
     // Voice Isolation
     if (audioEl) {
-      audioEl.muted = !canHearAndSee;
+      audioEl.muted = (!canHearAndSee || vol === 0);
+      audioEl.volume = vol;
     }
 
     const avatarEl = getAvatarEl(peerId);
@@ -854,12 +1011,12 @@ async function unmuteMicrophone() {
 
     isMicActive = true;
     btnVoiceToggle.classList.add('active');
-    btnVoiceToggle.innerHTML = '🎤 Micro: ON';
+    btnVoiceToggle.innerHTML = t('mic_on');
 
     socket.emit('voice:join'); // For UI indicator (speaking icon)
   } catch (err) {
     console.error('Error accessing microphone:', err);
-    alert('No se pudo acceder al micrófono.');
+    alert(t('alert_mic'));
   }
 }
 
@@ -869,7 +1026,7 @@ function muteMicrophone() {
   }
   isMicActive = false;
   btnVoiceToggle.classList.remove('active');
-  btnVoiceToggle.innerHTML = '🎤 Micrófono';
+  btnVoiceToggle.innerHTML = t('mic_off');
 
   socket.emit('voice:leave'); // For UI indicator
 }
@@ -1013,7 +1170,7 @@ async function startScreenShare() {
     localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
     isScreenSharing = true;
     btnScreenToggle.classList.add('active');
-    btnScreenToggle.innerHTML = '💻 Compartiendo...';
+    btnScreenToggle.innerHTML = t('screen_on');
 
     // Broadcast that I started sharing
     socket.emit('screen:start');
@@ -1033,7 +1190,7 @@ function stopScreenShare() {
   }
   isScreenSharing = false;
   btnScreenToggle.classList.remove('active');
-  btnScreenToggle.innerHTML = '💻 Compartir Pantalla';
+  btnScreenToggle.innerHTML = t('screen_off');
   socket.emit('screen:stop');
 }
 

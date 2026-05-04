@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Términos y Condiciones - VanishGrid</title>
     <style>
+        html[lang="en"] .lang-es { display: none; }
+        html[lang="es"] .lang-en { display: none; }
+        
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             background: #12121f;
@@ -71,8 +74,11 @@
     </style>
 </head>
 
-<body>
-    <div class="content">
+    <script>
+      document.documentElement.lang = localStorage.getItem('evogrid_lang') || 'es';
+    </script>
+    
+    <div class="content lang-es">
         <h1>Términos y Condiciones de Uso</h1>
         <p>Al acceder y utilizar <strong>VanishGrid</strong>, aceptas cumplir con los siguientes términos. Si no estás
             de acuerdo con alguno de ellos, por favor, cierra esta pestaña de inmediato.</p>
@@ -119,6 +125,43 @@
             plataforma tras un cambio implica la aceptación de los nuevos términos.</p>
 
         <a href="/" class="back-link">← Entendido, volver a la oficina</a>
+    </div>
+
+    <div class="content lang-en">
+        <h1>Terms and Conditions of Use</h1>
+        <p>By accessing and using <strong>VanishGrid</strong>, you agree to comply with the following terms. If you do not agree with any of them, please close this tab immediately.</p>
+
+        <div class="highlight">
+            <h2>1. Nature of the Service</h2>
+            <p>VanishGrid is an <strong>ephemeral</strong> communication platform. We are not a storage service. The connection is based on volatile real-time transmissions.</p>
+        </div>
+
+        <h2>2. User Conduct</h2>
+        <p>You are solely responsible for your interactions. The following is strictly prohibited:</p>
+        <ul>
+            <li>Using chat or voice to harass, insult, defame, or discriminate against other users.</li>
+            <li>Impersonating administrators, companies, or any other person.</li>
+            <li>Transmitting illegal or obscene content, or violating copyright.</li>
+            <li>Attempting to disrupt the service through DoS attacks, code injection, or any hacking technique.</li>
+        </ul>
+
+        <h2>3. Disclaimer</h2>
+        <p><strong>Third-party content:</strong> VanishGrid does not actively monitor or moderate real-time conversations. We are not responsible for opinions, advice, or files shared by users.</p>
+        <p><strong>Availability:</strong> As a project in development, we do not guarantee an error-free service or uninterrupted connection. We are not liable for data loss or disconnections during important meetings.</p>
+
+        <h2>4. Intellectual Property</h2>
+        <p>The code, design, pixel art sprites, and the name <strong>VanishGrid</strong> are the exclusive property of their creators. The user does not acquire any rights over the platform's assets by using it.</p>
+
+        <h2>5. Privacy and Data (Zero Retention Policy)</h2>
+        <p>We reiterate our commitment: <strong>we do not store logs</strong> of conversations, persistent IP addresses, or identities. When you close the session, all your activity disappears from our infrastructure.</p>
+
+        <h2>6. Use of LocalStorage</h2>
+        <p>We use local storage exclusively for functional purposes (user preferences and acceptance of these terms). We do not use tracking cookies or share information with third parties.</p>
+
+        <h2>7. Modifications</h2>
+        <p>We reserve the right to modify these terms at any time. Continued use of the platform after a change implies acceptance of the new terms.</p>
+
+        <a href="/" class="back-link">← Understood, return to the office</a>
     </div>
 </body>
 
