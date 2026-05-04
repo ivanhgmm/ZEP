@@ -274,7 +274,7 @@ body {
 #sidebar-room-code:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(92, 110, 248, 0.2);
-  background: #18182b;
+  background: var(--panel);
 }
 
 .section-label {
@@ -759,6 +759,19 @@ main {
 .btn-link:hover {
   background-color: var(--accent);
   text-decoration: underline;
+}
+
+.btn-support-login {
+  background: rgba(92, 110, 248, 0.2);
+  border: 1px solid var(--accent);
+  margin-top: 10px;
+}
+
+.btn-support-login:hover {
+  background: var(--accent) !important;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(92, 110, 248, 0.4);
 }
 
 /* ─── Chat System ────────────────────────────────────────────── */
