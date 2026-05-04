@@ -4,6 +4,11 @@
       "id": "makima",
       "name": "Makima",
       "path": "assets/pets/makima/"
+    },
+    {
+      "id": "power",
+      "name": "Power",
+      "path": "assets/pets/power/"
     }
   ]
 }
