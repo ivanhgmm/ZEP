@@ -25,6 +25,7 @@ let selectedMapId = 'office';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const AVATARS = ['🧑', '👩', '👨', '🧔', '👱', '👩‍💼', '👨‍💼', '🧑‍💻', '👩‍💻', '👨‍💻', '👽', '🐶', '🐱', '🤖'];
+let PETS = []; // Loaded from manifest
 
 // ─── Socket ───────────────────────────────────────────────────────────────────
 const socket = io();
@@ -297,6 +298,16 @@ setTimeout(updateLanguageUI, 100);
 
 // ─── Fetch map list and build login selector ───────────────────────────────────
 async function initLogin() {
+  // Load pets manifest
+  try {
+    const petRes = await fetch('/pets-manifest.json');
+    const petData = await petRes.json();
+    PETS = petData.pets;
+    initAvatarSelector(); // Re-init after loading pets
+  } catch (e) {
+    console.error('Pets manifest not found', e);
+  }
+
   const res = await fetch('/api/maps');
   const maps = await res.json();
 
@@ -431,10 +442,94 @@ function initAvatarSelector() {
     });
     container.appendChild(el);
   });
+
+  // Add Pets from manifest
+  PETS.forEach(pet => {
+    const el = document.createElement('div');
+    el.className = 'avatar-option' + (pet.id === myAvatar ? ' active' : '');
+    
+    // Create a mini preview of the pet
+    const preview = document.createElement('div');
+    preview.className = 'pet-sprite';
+    preview.style.backgroundImage = `url(${pet.path}spritesheet.webp)`;
+    preview.style.backgroundPosition = '0% 0%';
+    preview.style.transform = 'translateX(-50%) scale(0.6)'; // Scale down for preview
+    preview.style.bottom = '12px';
+    
+    // Name label
+    const nameLabel = document.createElement('span');
+    nameLabel.textContent = pet.name;
+    nameLabel.style.position = 'absolute';
+    nameLabel.style.bottom = '-18px';
+    nameLabel.style.fontSize = '10px';
+    nameLabel.style.fontWeight = 'bold';
+    nameLabel.style.color = 'var(--muted)';
+    
+    const previewEl = document.getElementById('current-avatar-preview');
+    
+    el.appendChild(preview);
+    el.appendChild(nameLabel);
+    el.addEventListener('click', () => {
+      myAvatar = pet.id;
+      container.querySelectorAll('.avatar-option').forEach(a => a.classList.remove('active'));
+      el.classList.add('active');
+      
+      // Update login preview
+      if (previewEl) {
+        previewEl.textContent = ''; // Clear emoji
+        const petPrev = document.createElement('div');
+        petPrev.className = 'pet-sprite';
+        petPrev.style.backgroundImage = `url(${pet.path}spritesheet.webp)`;
+        petPrev.style.backgroundPosition = '0% 0%';
+        previewEl.appendChild(petPrev);
+      }
+      
+      const accordion = document.getElementById('avatar-accordion');
+      if (accordion) accordion.removeAttribute('open');
+    });
+    container.appendChild(el);
+  });
 }
 
+// ─── PET ANIMATION SYSTEM ───────────────────────────────────────────────────
+const PET_ANIMS = {
+  idle: { row: 0, frames: 1 },
+  walk: { row: 1, frames: 4 }, // Basic assumption for walking
+  emote: { row: 2, frames: 4 }
+};
+
+function updatePetSprites() {
+  const now = Date.now();
+  Object.values(players).forEach(p => {
+    const avatarEl = getAvatarEl(p.id);
+    if (!avatarEl) return;
+    
+    const spriteEl = avatarEl.querySelector('.pet-sprite');
+    if (!spriteEl) return;
+
+    // Movement detection for animation
+    const isMoving = p.isMoving; // We'll set this in move socket event
+    const anim = isMoving ? PET_ANIMS.walk : PET_ANIMS.idle;
+    
+    const frame = Math.floor(now / 150) % anim.frames;
+    const xPerc = (frame / 7) * 100; // 8 columns = 0 to 7
+    const yPerc = (anim.row / 8) * 100; // 9 rows = 0 to 8
+    
+    spriteEl.style.backgroundPosition = `${xPerc}% ${yPerc}%`;
+
+    // Handle directional flip
+    if (p.facingLeft) {
+      spriteEl.classList.add('flipped');
+    } else {
+      spriteEl.classList.remove('flipped');
+    }
+  });
+  requestAnimationFrame(updatePetSprites);
+}
+requestAnimationFrame(updatePetSprites);
+
 // Initialize on load
-initAvatarSelector();
+// initAvatarSelector() is called inside initLogin() now
 
 // ─── Enter the office ─────────────────────────────────────────────────────────
 btnEnter.addEventListener('click', enterOffice);
@@ -529,17 +624,25 @@ function getAvatarEl(id) {
 
 function createAvatar(player) {
   const el = document.createElement('div');
-  el.className = 'player-avatar' + (player.id === myId ? ' is-me' : '');
+  const isPet = PETS.find(p => p.id === player.avatar);
+  el.className = 'player-avatar' + (player.id === myId ? ' is-me' : '') + (isPet ? ' is-pet' : '');
   el.id = `avatar-${player.id}`;
 
-  const emoji = document.createElement('span');
-  emoji.textContent = player.avatar;
+  if (isPet) {
+    const sprite = document.createElement('div');
+    sprite.className = 'pet-sprite';
+    sprite.style.backgroundImage = `url(${isPet.path}spritesheet.webp)`;
+    el.appendChild(sprite);
+  } else {
+    const emoji = document.createElement('span');
+    emoji.textContent = player.avatar;
+    el.appendChild(emoji);
+  }
 
   const label = document.createElement('span');
   label.className = 'avatar-label';
   label.textContent = player.name;
 
-  el.appendChild(emoji);
   el.appendChild(label);
 
   positionAvatar(el, player.x, player.y);
@@ -724,6 +827,21 @@ function updateIsolation() {
 
 socket.on('player:moved', ({ id, x, y }) => {
   if (!players[id]) return;
+  
+  // Directional flip logic
+  if (x < players[id].x) {
+    players[id].facingLeft = true;
+  } else if (x > players[id].x) {
+    players[id].facingLeft = false;
+  }
+
+  // Set moving flag for animation
+  players[id].isMoving = true;
+  clearTimeout(players[id].moveTimeout);
+  players[id].moveTimeout = setTimeout(() => {
+    if (players[id]) players[id].isMoving = false;
+  }, 300);
+
   players[id].x = x;
   players[id].y = y;
   const el = getAvatarEl(id);
@@ -932,7 +1050,14 @@ document.addEventListener('keydown', (e) => {
 
   socket.emit('move', { x: nx, y: ny });
   // Optimistic local update
+  if (nx < me.x) me.facingLeft = true;
+  else if (nx > me.x) me.facingLeft = false;
+  
   me.x = nx; me.y = ny;
+  me.isMoving = true;
+  clearTimeout(me.moveTimeout);
+  me.moveTimeout = setTimeout(() => { me.isMoving = false; }, 300);
+
   const el = getAvatarEl(myId);
   if (el) positionAvatar(el, nx, ny);
 

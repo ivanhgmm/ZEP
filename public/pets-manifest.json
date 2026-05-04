@@ -1,0 +1,9 @@
+{
+  "pets": [
+    {
+      "id": "makima",
+      "name": "Makima",
+      "path": "assets/pets/makima/"
+    }
+  ]
+}

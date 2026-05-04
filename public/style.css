@@ -347,6 +347,7 @@ body {
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   user-select: none;
   background: var(--bg);
+  position: relative;
 }
 
 .avatar-option:hover {
@@ -692,6 +693,37 @@ main {
 
 .player-avatar.is-me .avatar-label {
   background: var(--accent);
+}
+
+/* ─── Pet Sprite System ──────────────────────────────────────── */
+.pet-sprite {
+  width: 48px; /* Slightly larger than cell to pop out */
+  height: 52px; /* Maintain 192:208 ratio (48 * 208/192 = 52) */
+  background-size: 800% 900%; /* 8x9 grid */
+  background-repeat: no-repeat;
+  image-rendering: pixelated; /* Crisp pixel art */
+  position: absolute;
+  bottom: 4px; /* Stand on the floor */
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.player-avatar.is-pet {
+  font-size: 0; /* Hide emoji if it exists as fallback */
+}
+
+.pet-sprite.flipped {
+  transform: translateX(-50%) scaleX(-1);
+}
+
+#current-avatar-preview {
+  position: relative;
+  overflow: visible; /* Let the pet pop out if needed */
+}
+
+#current-avatar-preview .pet-sprite {
+  transform: translateX(-50%) scale(0.6);
+  bottom: -4px;
 }
 
 /* ─── Players Panel ──────────────────────────────────────────── */
